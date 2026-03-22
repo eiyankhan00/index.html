@@ -15,7 +15,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     body {
       font-family: 'Inter', sans-serif;
       background-color: #f8fafc;
@@ -26,7 +26,7 @@
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-    /* Custom Animations */
+    /* Animations */
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
@@ -53,10 +53,7 @@
     .delay-100 { animation-delay: 100ms; }
     .delay-200 { animation-delay: 200ms; }
 
-    /* Input Field Typing Animations */
-    input, select {
-      transition: all 0.2s ease-in-out;
-    }
+    input, select { transition: all 0.2s ease-in-out; }
     input:focus, select:focus {
       transform: scale(1.01);
       box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
@@ -79,12 +76,12 @@
         </div>
       </div>
       
-      <!-- Backup & Restore Buttons -->
+      <!-- Backup/Restore -->
       <div class="flex gap-2 bg-white p-2 rounded-xl shadow-sm border border-slate-200">
-        <button onclick="exportData()" class="px-4 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-semibold text-sm rounded-lg transition-colors flex items-center gap-2 hover:scale-105 active:scale-95 duration-200" title="Save Backup file (You can upload this to Google Drive)">
+        <button onclick="exportData()" class="px-4 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-semibold text-sm rounded-lg transition-colors flex items-center gap-2 hover:scale-105 active:scale-95 duration-200">
           <i class="fa-solid fa-cloud-arrow-down"></i> Backup Data
         </button>
-        <label class="cursor-pointer px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold text-sm rounded-lg transition-colors flex items-center gap-2 hover:scale-105 active:scale-95 duration-200" title="Restore from Backup file">
+        <label class="cursor-pointer px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold text-sm rounded-lg transition-colors flex items-center gap-2 hover:scale-105 active:scale-95 duration-200">
           <i class="fa-solid fa-cloud-arrow-up"></i> Restore Data
           <input type="file" id="importFile" accept=".json" class="hidden" onchange="importData(event)">
         </label>
@@ -93,7 +90,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       
-      <!-- Left Column: Form Section -->
+      <!-- Form Section -->
       <div class="lg:col-span-1 animate-fade-in-up delay-100">
         <div class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200 sticky top-6 hover:shadow-md transition-shadow duration-300">
           <h2 class="text-lg font-bold mb-5 flex items-center gap-2 text-slate-800 border-b border-slate-100 pb-3">
@@ -101,15 +98,13 @@
           </h2>
           
           <form id="paymentForm" class="space-y-5">
-            
-            <!-- Basic Info -->
             <div class="space-y-4">
               <div>
                 <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                   <i class="fa-regular fa-calendar text-blue-500"></i> Date
                 </label>
                 <input type="text" id="dateInput" placeholder="e.g., 22 March 2026" required
-                  class="w-full px-4 py-2.5 bg-amber-50 border-2 border-amber-300 rounded-xl focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 outline-none font-semibold text-slate-800 transition-all placeholder:font-normal">
+                  class="w-full px-4 py-2.5 bg-amber-50 border-2 border-amber-300 rounded-xl focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 outline-none font-semibold text-slate-800 transition-all">
               </div>
 
               <div>
@@ -121,7 +116,7 @@
               <div class="grid grid-cols-2 gap-3">
                 <div>
                   <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Method</label>
-                  <select id="method" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer">
+                  <select id="method" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none appearance-none cursor-pointer transition-all">
                     <option value="bKash">bKash</option>
                     <option value="Nagad">Nagad</option>
                     <option value="Rocket">Rocket</option>
@@ -135,61 +130,39 @@
                 </div>
               </div>
 
-              <!-- Transaction ID Box -->
               <div>
-                <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                  <i class="fa-solid fa-hashtag text-emerald-500"></i> Transaction ID <span class="text-slate-400 font-normal lowercase">(Optional)</span>
+                <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+                  Transaction ID <span class="text-slate-400 font-normal lowercase">(Optional)</span>
                 </label>
                 <input type="text" id="trxId" placeholder="Paste TrxID here"
-                  class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-mono text-sm text-slate-700">
+                  class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-mono text-sm">
               </div>
             </div>
 
-            <!-- ID Type 1000x -->
+            <!-- ID 1000x -->
             <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100 space-y-3 transition-colors hover:border-blue-300">
               <h3 class="font-bold text-blue-800 text-sm flex items-center gap-2">
                 <i class="fa-solid fa-tag"></i> ID Type: 1000x
               </h3>
               <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-xs font-medium text-slate-500 mb-1">Valid Qty</label>
-                  <input type="number" id="qty1000x" placeholder="0" min="0"
-                    class="calc-input w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                </div>
-                <div>
-                  <label class="block text-xs font-medium text-slate-500 mb-1">Rate (৳)</label>
-                  <input type="number" id="rate1000x" placeholder="0.00" min="0" step="0.01"
-                    class="calc-input w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                </div>
+                <input type="number" id="qty1000x" placeholder="Qty" min="0" class="calc-input w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none">
+                <input type="number" id="rate1000x" placeholder="Rate" min="0" step="0.01" class="calc-input w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none">
               </div>
-              <div class="text-right text-sm font-semibold text-slate-600">
-                Subtotal: <span id="sub1000x" class="text-blue-600 font-bold">৳ 0</span>
-              </div>
+              <div class="text-right text-sm font-semibold text-slate-600">Subtotal: <span id="sub1000x" class="text-blue-600 font-bold">৳ 0</span></div>
             </div>
 
-            <!-- ID Type 615x -->
+            <!-- ID 615x -->
             <div class="bg-purple-50/50 p-4 rounded-xl border border-purple-100 space-y-3 transition-colors hover:border-purple-300">
               <h3 class="font-bold text-purple-800 text-sm flex items-center gap-2">
                 <i class="fa-solid fa-tag"></i> ID Type: 615x
               </h3>
               <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-xs font-medium text-slate-500 mb-1">Valid Qty</label>
-                  <input type="number" id="qty615x" placeholder="0" min="0"
-                    class="calc-input w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none">
-                </div>
-                <div>
-                  <label class="block text-xs font-medium text-slate-500 mb-1">Rate (৳)</label>
-                  <input type="number" id="rate615x" placeholder="0.00" min="0" step="0.01"
-                    class="calc-input w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none">
-                </div>
+                <input type="number" id="qty615x" placeholder="Qty" min="0" class="calc-input w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none">
+                <input type="number" id="rate615x" placeholder="Rate" min="0" step="0.01" class="calc-input w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none">
               </div>
-              <div class="text-right text-sm font-semibold text-slate-600">
-                Subtotal: <span id="sub615x" class="text-purple-600 font-bold">৳ 0</span>
-              </div>
+              <div class="text-right text-sm font-semibold text-slate-600">Subtotal: <span id="sub615x" class="text-purple-600 font-bold">৳ 0</span></div>
             </div>
 
-            <!-- Total & Submit -->
             <div class="pt-2">
               <div class="flex justify-between items-center mb-4 bg-slate-900 text-white p-4 rounded-xl shadow-md transform hover:scale-[1.02] transition-transform duration-300">
                 <span class="text-sm font-medium opacity-80 uppercase tracking-wider">Grand Total</span>
@@ -197,7 +170,7 @@
               </div>
               <div id="formActions" class="flex flex-col">
                 <button type="submit" id="submitBtn" 
-                  class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-300 shadow-md shadow-blue-500/20 flex justify-center items-center gap-2 hover:-translate-y-1 active:scale-95">
+                  class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-300 shadow-md flex justify-center items-center gap-2 hover:-translate-y-1 active:scale-95">
                   <i class="fa-solid fa-plus"></i> Save Record
                 </button>
               </div>
@@ -206,112 +179,230 @@
         </div>
       </div>
 
-      <!-- Right Column: List Section -->
+      <!-- List Section -->
       <div class="lg:col-span-2 space-y-4 animate-fade-in-up delay-200">
         <h2 class="text-lg font-bold flex items-center gap-2 mb-4 text-slate-800">
           <i class="fa-solid fa-list-check text-slate-500"></i> Payment Records 
           <span id="recordCount" class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">0</span>
         </h2>
 
-        <!-- Search Bar -->
         <div class="relative mb-4">
-          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-            <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <i class="fa-solid fa-magnifying-glass"></i>
           </div>
-          <input type="text" id="searchInput" placeholder="Search by date (e.g., 22 March) or user name..." 
-            class="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none shadow-sm transition-all text-sm font-medium text-slate-700">
+          <input type="text" id="searchInput" placeholder="Search by date or name..." 
+            class="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none shadow-sm transition-all text-sm font-medium">
         </div>
 
         <div id="emptyState" class="hidden bg-white p-12 text-center rounded-2xl border border-slate-200 shadow-sm text-slate-400">
           <i class="fa-solid fa-folder-open text-5xl mb-4 opacity-20"></i>
           <p class="font-medium text-slate-500">No payment records found.</p>
-          <p class="text-sm">Add a new payment from the left panel.</p>
         </div>
 
-        <div id="recordsContainer" class="grid gap-4">
-          <!-- Records will be injected here via JS -->
-        </div>
+        <div id="recordsContainer" class="grid gap-4"></div>
       </div>
-
     </div>
   </div>
 
-  <!-- Vanilla JavaScript Logic -->
+  <!-- Custom Toasts -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Custom Confirm Modal -->
+  <div id="confirm-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 transform scale-95 transition-transform duration-300">
+      <h3 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2">
+        <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Confirm Action
+      </h3>
+      <p class="text-slate-600 mb-6" id="confirm-message">Are you sure?</p>
+      <div class="flex justify-end gap-3">
+        <button id="confirm-cancel" class="px-4 py-2 text-slate-600 font-semibold hover:bg-slate-100 rounded-lg transition-colors">Cancel</button>
+        <button id="confirm-ok" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors">Confirm</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const STORAGE_KEY = 'paymentTrackerData_pro';
     let recordsData = [];
-    let editingId = null; // Editing State
+    let editingId = null;
+
+    // Toast Notification System
+    const showToast = (message, type = 'error') => {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const bg = type === 'error' ? 'bg-red-500' : (type === 'success' ? 'bg-emerald-500' : 'bg-blue-500');
+      const icon = type === 'error' ? 'fa-circle-exclamation' : (type === 'success' ? 'fa-circle-check' : 'fa-circle-info');
+      
+      toast.className = `${bg} text-white px-5 py-3 rounded-xl shadow-lg transform transition-all duration-300 translate-y-10 opacity-0 flex items-center gap-3 font-medium text-sm pointer-events-auto`;
+      toast.innerHTML = `<i class="fa-solid ${icon}"></i> ${message}`;
+      
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-10', 'opacity-0');
+      }, 10);
+
+      setTimeout(() => {
+        toast.classList.add('translate-y-10', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    };
+
+    // Confirm Modal System
+    let confirmCallback = null;
+    const showConfirm = (message, callback) => {
+      document.getElementById('confirm-message').innerText = message;
+      const modal = document.getElementById('confirm-modal');
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.querySelector('div').classList.remove('scale-95');
+      }, 10);
+      confirmCallback = callback;
+    };
+
+    document.getElementById('confirm-cancel').addEventListener('click', () => {
+      closeModal();
+    });
+    
+    document.getElementById('confirm-ok').addEventListener('click', () => {
+      if(confirmCallback) confirmCallback();
+      closeModal();
+    });
+
+    const closeModal = () => {
+      const modal = document.getElementById('confirm-modal');
+      modal.classList.add('opacity-0');
+      modal.querySelector('div').classList.add('scale-95');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 300);
+    };
+
+    // Core Logic
+    const renderRecords = () => {
+      const recordsContainer = document.getElementById('recordsContainer');
+      const recordCount = document.getElementById('recordCount');
+      const searchInput = document.getElementById('searchInput');
+      const term = searchInput.value.toLowerCase().trim();
+      
+      const filtered = recordsData.filter(r => r.date.toLowerCase().includes(term) || r.userName.toLowerCase().includes(term));
+      recordCount.innerText = filtered.length;
+      
+      if (filtered.length === 0) { 
+        recordsContainer.innerHTML = ''; 
+        document.getElementById('emptyState').classList.remove('hidden'); 
+        return; 
+      }
+      document.getElementById('emptyState').classList.add('hidden');
+      
+      let html = '';
+      filtered.forEach(record => {
+        const renderAction = (type, total, status) => {
+          if(total === 0) return '';
+          let btns = status === 'Pending' ? `
+            <div class="flex items-center gap-1.5 mt-2 sm:mt-0">
+              <button onclick="updateStatus(${record.id}, '${type}', 'Paid')" class="px-3 py-1.5 bg-green-500 text-white rounded text-xs font-bold shadow-sm active:scale-95 transition-transform hover:scale-105">Accept</button>
+              <button onclick="updateStatus(${record.id}, '${type}', 'Rejected')" class="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 rounded text-xs font-bold active:scale-95 transition-colors">Reject</button>
+            </div>` : `
+            <span class="px-3 py-1 text-xs font-bold rounded-full mt-2 sm:mt-0 flex items-center gap-1 ${status === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+              <i class="fa-solid ${status === 'Paid' ? 'fa-check-circle' : 'fa-times-circle'}"></i> ${status}
+            </span>`;
+          return `<div class="flex flex-col sm:flex-row justify-between sm:items-center p-3 rounded-xl border ${type === '1000x' ? 'bg-blue-50/50 border-blue-100' : 'bg-purple-50/50 border-purple-100'}">
+            <span class="text-sm font-semibold">${type} ID: ${record['qty'+type]} x ${record['rate'+type]} = ৳${total.toLocaleString()}</span>${btns}
+          </div>`;
+        };
+
+        const mBadge = { bKash: 'bg-pink-100 text-pink-700', Nagad: 'bg-orange-100 text-orange-700', Rocket: 'bg-purple-100 text-purple-700', Binance: 'bg-yellow-100 text-yellow-800' }[record.method] || 'bg-slate-100 text-slate-700';
+
+        html += `
+          <div id="record-${record.id}" class="animate-scale-in bg-white rounded-2xl shadow-sm border border-slate-200 hover:border-blue-300 transition-all duration-300 p-4 md:p-5">
+            <div class="flex justify-between items-start mb-4 border-b border-slate-100 pb-4">
+              <div>
+                <h3 class="text-lg font-bold">${record.userName}</h3>
+                <div class="flex gap-2 mt-1.5">
+                  <span class="${mBadge} px-2 py-0.5 rounded text-xs font-bold">${record.method}</span>
+                  <span class="text-sm font-mono font-bold text-blue-600">${record.number}</span>
+                </div>
+                <div class="flex flex-wrap gap-2 mt-2.5">
+                  <div class="px-2.5 py-1 bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold rounded-md"><i class="fa-regular fa-calendar"></i> ${record.date}</div>
+                  ${record.trxId ? `<div class="px-2.5 py-1 bg-emerald-50 text-emerald-800 text-xs font-bold rounded-md">TrxID: ${record.trxId}</div>` : ''}
+                </div>
+              </div>
+              <div class="flex gap-1">
+                <button onclick="editRecord(${record.id})" class="text-slate-400 hover:text-blue-600 p-2 transition-all" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>
+                <button onclick="deleteRecord(${record.id})" class="text-slate-400 hover:text-red-600 p-2 transition-all" title="Delete"><i class="fa-regular fa-trash-can"></i></button>
+              </div>
+            </div>
+            <div class="space-y-3">${renderAction('1000x', record.total1000x, record.status1000x)}${renderAction('615x', record.total615x, record.status615x)}</div>
+            <div class="mt-5 pt-4 border-t border-slate-100 flex justify-between items-center">
+              <div><span class="text-xs font-bold text-slate-500 uppercase">Total Amount</span><div class="text-2xl font-black">৳${record.grandTotal.toLocaleString()}</div></div>
+              <button onclick="downloadReceipt(${record.id})" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 hover:-translate-y-0.5 active:scale-95"><i class="fa-solid fa-file-arrow-down"></i> Download Receipt</button>
+            </div>
+          </div>`;
+      });
+      document.getElementById('recordsContainer').innerHTML = html;
+    };
 
     const loadData = () => {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          recordsData = JSON.parse(saved);
-        }
-      } catch (err) {
-        // App crash/error log only
-        console.error("Error loading data:", err);
+        if (saved) recordsData = JSON.parse(saved);
+      } catch (err) {}
+      
+      // Auto-set today's date if not set
+      if (!document.getElementById('dateInput').value) {
+        const d = new Date();
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        document.getElementById('dateInput').value = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
       }
+      
       renderRecords();
     };
 
     const saveData = () => {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(recordsData));
-        renderRecords();
-      } catch (err) {
-        console.error("Error saving data:", err);
-      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(recordsData));
+      renderRecords();
     };
 
     window.exportData = () => {
       if (recordsData.length === 0) {
-        alert("No data available to backup!");
-        return;
+        return showToast("No data available to backup!", "error");
       }
-      try {
-        const dataStr = JSON.stringify(recordsData, null, 2);
-        const blob = new Blob([dataStr], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Payment_Backup_${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        alert("Backup file downloaded! You can upload this JSON file to Google Drive.");
-      } catch(err) {
-        console.error("Export Error:", err);
-      }
+      const dataStr = JSON.stringify(recordsData, null, 2);
+      const blob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Backup_${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      showToast("Data backed up successfully!", "success");
     };
 
     window.importData = (event) => {
       const file = event.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
-          const importedData = JSON.parse(e.target.result);
-          if (Array.isArray(importedData)) {
-            if(confirm("This will merge imported data with your current records. Continue?")) {
-               const existingIds = new Set(recordsData.map(r => r.id));
-               importedData.forEach(item => {
-                 if(!existingIds.has(item.id)) recordsData.push(item);
-               });
-               recordsData.sort((a, b) => b.id - a.id);
-               saveData();
-               alert("Data restored successfully!");
-            }
+          const imported = JSON.parse(e.target.result);
+          if (Array.isArray(imported)) {
+            const existingIds = new Set(recordsData.map(r => r.id));
+            let importedCount = 0;
+            imported.forEach(item => { 
+              if(!existingIds.has(item.id)) {
+                recordsData.push(item); 
+                importedCount++;
+              }
+            });
+            recordsData.sort((a, b) => b.id - a.id);
+            saveData();
+            showToast(`Successfully imported ${importedCount} records.`, "success");
           } else {
-            alert("Invalid backup file.");
+            showToast("Invalid backup file format.", "error");
           }
         } catch (err) {
-          console.error("Import Error:", err);
-          alert("Error reading backup file.");
+          showToast("Failed to parse backup file.", "error");
         }
       };
       reader.readAsText(file);
@@ -319,94 +410,36 @@
     };
 
     const form = document.getElementById('paymentForm');
-    const emptyState = document.getElementById('emptyState');
-    const recordsContainer = document.getElementById('recordsContainer');
-    const recordCount = document.getElementById('recordCount');
-    const searchInput = document.getElementById('searchInput');
-
     const dateInput = document.getElementById('dateInput');
     const userNameInput = document.getElementById('userName');
     const methodInput = document.getElementById('method');
     const numberInput = document.getElementById('number');
     const trxIdInput = document.getElementById('trxId');
-    
     const qty1000x = document.getElementById('qty1000x');
     const rate1000x = document.getElementById('rate1000x');
-    const sub1000x = document.getElementById('sub1000x');
-    
     const qty615x = document.getElementById('qty615x');
     const rate615x = document.getElementById('rate615x');
-    const sub615x = document.getElementById('sub615x');
-    
-    const grandTotalDisplay = document.getElementById('grandTotalDisplay');
-
-    // Helper to trigger animation on value change
-    const animateValueUpdate = (element, newValue) => {
-      if (element.innerText !== newValue) {
-        element.innerText = newValue;
-        element.classList.remove('animate-value-pop');
-        void element.offsetWidth; // Trigger reflow
-        element.classList.add('animate-value-pop');
-      }
-    };
 
     const calculateTotals = () => {
-      const q1 = Number(qty1000x.value) || 0;
-      const r1 = Number(rate1000x.value) || 0;
-      const t1000x = q1 * r1;
-      
-      const q6 = Number(qty615x.value) || 0;
-      const r6 = Number(rate615x.value) || 0;
-      const t615x = q6 * r6;
-
+      const t1000x = (Number(qty1000x.value) || 0) * (Number(rate1000x.value) || 0);
+      const t615x = (Number(qty615x.value) || 0) * (Number(rate615x.value) || 0);
       const total = t1000x + t615x;
-
-      animateValueUpdate(sub1000x, `৳ ${t1000x.toLocaleString('en-US')}`);
-      animateValueUpdate(sub615x, `৳ ${t615x.toLocaleString('en-US')}`);
-      animateValueUpdate(grandTotalDisplay, `৳ ${total.toLocaleString('en-US')}`);
-
+      document.getElementById('sub1000x').innerText = `৳ ${t1000x.toLocaleString()}`;
+      document.getElementById('sub615x').innerText = `৳ ${t615x.toLocaleString()}`;
+      document.getElementById('grandTotalDisplay').innerText = `৳ ${total.toLocaleString()}`;
       return { t1000x, t615x, total };
     };
 
-    document.querySelectorAll('.calc-input').forEach(input => {
-      input.addEventListener('input', calculateTotals);
-    });
+    document.querySelectorAll('.calc-input').forEach(input => input.addEventListener('input', calculateTotals));
 
-    // Cancel Edit Function
-    window.cancelEdit = () => {
-      editingId = null;
-      userNameInput.value = '';
-      numberInput.value = '';
-      trxIdInput.value = '';
-      qty1000x.value = '';
-      rate1000x.value = '';
-      qty615x.value = '';
-      rate615x.value = '';
-      dateInput.value = '';
-      methodInput.value = 'bKash';
-      calculateTotals();
-
-      const btn = document.getElementById('submitBtn');
-      btn.innerHTML = '<i class="fa-solid fa-plus"></i> Save Record';
-      btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700', 'shadow-emerald-500/20');
-      btn.classList.add('bg-blue-600', 'hover:bg-blue-700', 'shadow-blue-500/20');
-
-      const cancelBtn = document.getElementById('cancelEditBtn');
-      if (cancelBtn) cancelBtn.remove();
-    };
-
-    // Form Submit Handler
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-
       const totals = calculateTotals();
-      if (totals.t1000x === 0 && totals.t615x === 0) {
-        alert("Please enter quantity and rate for at least one ID type.");
-        return;
+      if (totals.total === 0) {
+        return showToast("Please enter valid quantity and rate for at least one item!", "error");
       }
 
       if (editingId) {
-        // Update Existing Record
         const index = recordsData.findIndex(r => r.id === editingId);
         if (index !== -1) {
           recordsData[index] = {
@@ -423,14 +456,12 @@
             rate615x: Number(rate615x.value) || 0,
             total615x: totals.t615x,
             grandTotal: totals.total,
-            status1000x: totals.t1000x > 0 ? (recordsData[index].status1000x === 'N/A' ? 'Pending' : recordsData[index].status1000x) : 'N/A',
-            status615x: totals.t615x > 0 ? (recordsData[index].status615x === 'N/A' ? 'Pending' : recordsData[index].status615x) : 'N/A',
           };
+          showToast("Record updated successfully!", "success");
         }
-        window.cancelEdit(); 
+        window.cancelEdit();
         saveData();
       } else {
-        // Add New Record
         const newRecord = {
           id: Date.now(),
           date: dateInput.value,
@@ -448,192 +479,207 @@
           status1000x: totals.t1000x > 0 ? 'Pending' : 'N/A',
           status615x: totals.t615x > 0 ? 'Pending' : 'N/A',
         };
-
         recordsData.unshift(newRecord);
         saveData();
-        window.cancelEdit(); 
+        showToast("New record saved successfully!", "success");
+        
+        // Preserve date when resetting
+        const currentDate = dateInput.value;
+        form.reset();
+        dateInput.value = currentDate;
+        calculateTotals();
       }
     });
 
-    // Edit Button Action
     window.editRecord = (id) => {
-      const record = recordsData.find(r => r.id === id);
-      if (!record) return;
-
+      const r = recordsData.find(r => r.id === id);
+      if (!r) return;
       editingId = id;
-      dateInput.value = record.date || '';
-      userNameInput.value = record.userName || '';
-      methodInput.value = record.method || 'bKash';
-      numberInput.value = record.number || '';
-      trxIdInput.value = record.trxId || '';
-      qty1000x.value = record.qty1000x || '';
-      rate1000x.value = record.rate1000x || '';
-      qty615x.value = record.qty615x || '';
-      rate615x.value = record.rate615x || '';
-
+      dateInput.value = r.date;
+      userNameInput.value = r.userName;
+      methodInput.value = r.method;
+      numberInput.value = r.number;
+      trxIdInput.value = r.trxId || '';
+      qty1000x.value = r.qty1000x || '';
+      rate1000x.value = r.rate1000x || '';
+      qty615x.value = r.qty615x || '';
+      rate615x.value = r.rate615x || '';
       calculateTotals();
-
       const btn = document.getElementById('submitBtn');
       btn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Update Record';
-      btn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'shadow-blue-500/20');
-      btn.classList.add('bg-emerald-600', 'hover:bg-emerald-700', 'shadow-emerald-500/20');
-
-      if (!document.getElementById('cancelEditBtn')) {
+      btn.className = "w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-md flex justify-center items-center gap-2 hover:-translate-y-1 active:scale-95 transition-all duration-300";
+      
+      // Add a cancel button if it doesn't exist
+      if(!document.getElementById('cancelEditBtn')) {
+        const formActions = document.getElementById('formActions');
         const cancelBtn = document.createElement('button');
-        cancelBtn.id = 'cancelEditBtn';
         cancelBtn.type = 'button';
-        cancelBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> Cancel Edit';
-        cancelBtn.className = 'w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-all flex justify-center items-center gap-2 mt-3 hover:-translate-y-0.5 active:scale-95';
+        cancelBtn.id = 'cancelEditBtn';
         cancelBtn.onclick = window.cancelEdit;
-        document.getElementById('formActions').appendChild(cancelBtn);
+        cancelBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> Cancel Edit';
+        cancelBtn.className = "w-full mt-3 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl shadow-sm flex justify-center items-center gap-2 transition-all duration-300";
+        formActions.appendChild(cancelBtn);
       }
-
+      
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     window.updateStatus = (id, type, status) => {
-      const index = recordsData.findIndex(r => r.id === id);
-      if (index !== -1) {
-        if (type === '1000x') recordsData[index].status1000x = status;
-        if (type === '615x') recordsData[index].status615x = status;
+      const idx = recordsData.findIndex(r => r.id === id);
+      if (idx !== -1) {
+        if (type === '1000x') recordsData[idx].status1000x = status;
+        if (type === '615x') recordsData[idx].status615x = status;
         saveData();
       }
     };
 
     window.deleteRecord = (id) => {
-      if (confirm('Are you sure you want to permanently delete this record?')) {
-        const recordElement = document.getElementById(`record-${id}`);
-        if (recordElement) {
-          recordElement.classList.add('animate-slide-out');
-          setTimeout(() => {
-            recordsData = recordsData.filter(r => r.id !== id);
-            saveData();
-          }, 380); 
-        } else {
-          recordsData = recordsData.filter(r => r.id !== id);
-          saveData();
-        }
-      }
+      showConfirm("Are you sure you want to delete this payment record?", () => {
+        recordsData = recordsData.filter(r => r.id !== id);
+        saveData();
+        showToast("Record deleted successfully.", "success");
+      });
+    };
+
+    window.cancelEdit = () => {
+      editingId = null;
+      const currentDate = dateInput.value;
+      form.reset();
+      dateInput.value = currentDate;
+      calculateTotals();
+      const btn = document.getElementById('submitBtn');
+      btn.innerHTML = '<i class="fa-solid fa-plus"></i> Save Record';
+      btn.className = "w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-300 shadow-md flex justify-center items-center gap-2 hover:-translate-y-1 active:scale-95";
+      
+      const cancelBtn = document.getElementById('cancelEditBtn');
+      if(cancelBtn) cancelBtn.remove();
     };
 
     window.downloadReceipt = async (id) => {
       const record = recordsData.find(r => r.id === id);
       if(!record) return;
 
+      const isFullyPaid = (record.total1000x > 0 ? record.status1000x === 'Paid' : true) && 
+                          (record.total615x > 0 ? record.status615x === 'Paid' : true);
+
       const wrapper = document.createElement('div');
       wrapper.style.position = 'absolute';
       wrapper.style.top = '-9999px';
       wrapper.style.left = '-9999px';
       
-      const is1000xValid = record.total1000x > 0;
-      const is615xValid = record.total615x > 0;
-
       const getStatusBadge = (status) => {
-        if(status === 'Paid') return `<span style="color: #16a34a; font-weight: bold; background: #dcfce7; padding: 4px 12px; border-radius: 12px; font-size: 11px;">PAID</span>`;
-        if(status === 'Rejected') return `<span style="color: #dc2626; font-weight: bold; background: #fee2e2; padding: 4px 12px; border-radius: 12px; font-size: 11px;">REJECTED</span>`;
-        return `<span style="color: #ca8a04; font-weight: bold; background: #fef9c3; padding: 4px 12px; border-radius: 12px; font-size: 11px;">PENDING</span>`;
+        if(status === 'Paid') return `<div style="color: #059669; font-weight: 800; background: #ecfdf5; padding: 6px 14px; border-radius: 24px; font-size: 11px; line-height: 1; display: inline-block; border: 1px solid #a7f3d0; letter-spacing: 0.5px;">PAID</div>`;
+        return `<div style="color: #d97706; font-weight: 800; background: #fffbeb; padding: 6px 14px; border-radius: 24px; font-size: 11px; line-height: 1; display: inline-block; border: 1px solid #fde68a; letter-spacing: 0.5px;">PENDING</div>`;
       };
 
       wrapper.innerHTML = `
-        <div id="receiptContent" style="width: 540px; padding: 40px; background: #ffffff; font-family: 'Inter', sans-serif; color: #0f172a; border-radius: 16px; overflow: hidden;">
+        <div id="receiptContent" style="width: 540px; padding: 40px; background: #ffffff; font-family: 'Inter', sans-serif; color: #0f172a;">
           
-          <!-- Modern Header with Highlighted Date -->
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
-            <div style="display: flex; align-items: center; gap: 14px;">
-              <div style="width: 50px; height: 50px; background: #eff6ff; color: #2563eb; border-radius: 14px; display: flex; align-items: center; justify-content: center;">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-              </div>
-              <div>
-                <h1 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; color: #0f172a;">RECEIPT</h1>
-                <p style="margin: 4px 0 0 0; color: #64748b; font-size: 13px; font-weight: 600;">Payment Confirmed</p>
-              </div>
-            </div>
-            
-            <!-- Highly Visible Date Badge with Icon -->
-            <div style="background: #fffbeb; border: 2px solid #fde68a; padding: 10px 16px; border-radius: 12px; text-align: right; box-shadow: 0 4px 6px rgba(251, 191, 36, 0.1);">
-              <p style="margin: 0 0 4px 0; color: #d97706; font-size: 11px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; text-align: right;">
-                <svg style="vertical-align: middle; margin-right: 4px;" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg><span style="vertical-align: middle;">Date</span>
-              </p>
-              <p style="margin: 0; font-size: 16px; font-weight: 800; color: #b45309;">${record.date}</p>
-            </div>
-          </div>
+          <!-- Header Table -->
+          <table style="width: 100%; border-bottom: 2px solid #f1f5f9; padding-bottom: 25px; margin-bottom: 30px; border-collapse: collapse;">
+            <tr>
+              <td style="vertical-align: middle;">
+                <h1 style="margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">RECEIPT</h1>
+                <div style="margin-top: 4px;">
+                  ${isFullyPaid 
+                    ? '<span style="color: #059669; font-size: 14px; font-weight: 800; letter-spacing: 0.5px;">Payment Confirmed</span>' 
+                    : '<span style="color: #d97706; font-size: 14px; font-weight: 800; letter-spacing: 0.5px;">Payment Pending</span>'}
+                </div>
+              </td>
+              <td style="vertical-align: middle; text-align: right;">
+                <div style="color: #64748b; font-size: 10px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-bottom: 4px;">DATE</div>
+                <div style="font-size: 16px; font-weight: 800; color: #0f172a;">${record.date || 'N/A'}</div>
+              </td>
+            </tr>
+          </table>
 
-          <!-- Highlighted Transaction ID (If given) -->
+          <!-- Transaction ID Table -->
           ${record.trxId ? `
-          <div style="background: #ecfdf5; border: 1.5px dashed #10b981; padding: 16px; border-radius: 12px; margin-bottom: 30px; text-align: center; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.05);">
-            <p style="margin: 0 0 6px 0; color: #047857; font-size: 12px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; text-align: center;">
-              Transaction ID
-            </p>
-            <p style="margin: 0; font-size: 18px; font-weight: 700; color: #064e3b; font-family: monospace, sans-serif; letter-spacing: 1px;">${record.trxId}</p>
-          </div>
+          <table style="width: 100%; margin-bottom: 30px; border-collapse: collapse;">
+            <tr>
+              <td style="background: #ecfdf5; border: 1.5px dashed #10b981; padding: 18px; border-radius: 12px; text-align: center;">
+                <p style="margin: 0; color: #047857; font-size: 12px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-bottom: 4px;">TRANSACTION ID</p>
+                <p style="margin: 0; font-size: 20px; font-weight: 800; color: #064e3b; font-family: monospace;">${record.trxId}</p>
+              </td>
+            </tr>
+          </table>
           ` : ''}
 
-          <!-- Organized Customer Info Box with Icons -->
-          <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 35px; border: 1px solid #e2e8f0; display: flex; gap: 24px;">
-            <div style="flex: 1;">
-              <p style="margin: 0 0 8px 0; color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">
-                <svg style="vertical-align: middle; margin-right: 4px;" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span style="vertical-align: middle;">Customer Name</span>
-              </p>
-              <p style="margin: 0; font-size: 18px; font-weight: 700; color: #0f172a;">${record.userName}</p>
-            </div>
-            <div style="width: 2px; background: #e2e8f0; border-radius: 2px;"></div>
-            <div style="flex: 1;">
-              <p style="margin: 0 0 8px 0; color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">
-                <svg style="vertical-align: middle; margin-right: 4px;" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg><span style="vertical-align: middle;">Account Details</span>
-              </p>
-              <p style="margin: 0 0 6px 0; font-size: 16px; font-weight: 700; color: #0f172a;">${record.method}</p>
-              <p style="margin: 0; color: #475569; font-weight: 600; font-size: 13px; font-family: monospace; background: #e2e8f0; padding: 4px 8px; border-radius: 6px; display: inline-block;">${record.number}</p>
-            </div>
-          </div>
+          <!-- Info Table -->
+          <table style="width: 100%; background: #f8fafc; border-radius: 12px; border: 1.5px solid #e2e8f0; margin-bottom: 40px; border-collapse: collapse;">
+            <tr>
+              <td style="width: 50%; padding: 25px; border-right: 2px solid #e2e8f0; text-align: center; vertical-align: top;">
+                <p style="margin: 0 0 8px 0; color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 800;">CUSTOMER NAME</p>
+                <p style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">${record.userName}</p>
+              </td>
+              <td style="width: 50%; padding: 25px; text-align: center; vertical-align: top;">
+                <p style="margin: 0 0 8px 0; color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 800;">ACCOUNT DETAILS</p>
+                <p style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 2px;">${record.method}</p>
+                <p style="margin: 0; color: #2563eb; font-weight: 900; font-size: 18px; font-family: monospace;">${record.number}</p>
+              </td>
+            </tr>
+          </table>
 
-          <!-- Items Table -->
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 35px;">
-            <thead>
-              <tr style="border-bottom: 2px solid #e2e8f0;">
-                <th style="padding: 0 0 12px 0; font-size: 13px; color: #64748b; text-transform: uppercase; text-align: left; font-weight: 700; letter-spacing: 0.5px;">Details</th>
-                <th style="padding: 0 0 12px 0; font-size: 13px; color: #64748b; text-transform: uppercase; text-align: center; font-weight: 700; letter-spacing: 0.5px;">Qty × Rate</th>
-                <th style="padding: 0 0 12px 0; font-size: 13px; color: #64748b; text-transform: uppercase; text-align: right; font-weight: 700; letter-spacing: 0.5px;">Amount</th>
-              </tr>
-            </thead>
+          <!-- Items Details -->
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+            <tr>
+              <td style="padding-bottom: 12px; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 800;">ITEM DETAILS</td>
+              <td style="padding-bottom: 12px; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 800; text-align: center; width: 150px;">QTY X RATE</td>
+              <td style="padding-bottom: 12px; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 800; text-align: right; width: 100px;">TOTAL</td>
+            </tr>
+          </table>
+          <div style="border-bottom: 2px solid #e2e8f0; margin-bottom: 15px;"></div>
+
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 40px;">
             <tbody>
-              ${is1000xValid ? `
-              <tr style="border-bottom: 1px solid #f1f5f9;">
-                <td style="padding: 20px 0; font-weight: 600; font-size: 15px; color: #1e293b;">
-                  ID Type: 1000x
+              ${record.total1000x > 0 ? `
+              <tr>
+                <td style="padding: 18px 0; vertical-align: middle;">
+                  <span style="font-weight: 800; font-size: 16px;">1000x ID</span><br>
                   <div style="margin-top: 6px;">${getStatusBadge(record.status1000x)}</div>
                 </td>
-                <td style="padding: 20px 0; text-align: center; color: #475569; font-weight: 500; font-size: 15px;">${record.qty1000x} × ৳${record.rate1000x}</td>
-                <td style="padding: 20px 0; text-align: right; font-weight: 700; font-size: 16px; color: #0f172a;">৳${record.total1000x.toLocaleString('en-US')}</td>
+                <td style="padding: 18px 0; text-align: center; color: #475569; font-weight: 700; font-size: 17px;">${record.qty1000x} × ৳${record.rate1000x}</td>
+                <td style="padding: 18px 0; text-align: right; font-weight: 800; font-size: 18px;">৳${record.total1000x.toLocaleString('en-US')}</td>
               </tr>
+              <tr><td colspan="3" style="border-bottom: 1px solid #f1f5f9;"></td></tr>
               ` : ''}
-              ${is615xValid ? `
-              <tr style="border-bottom: 1px solid #f1f5f9;">
-                <td style="padding: 20px 0; font-weight: 600; font-size: 15px; color: #1e293b;">
-                  ID Type: 615x
+              ${record.total615x > 0 ? `
+              <tr>
+                <td style="padding: 18px 0; vertical-align: middle;">
+                  <span style="font-weight: 800; font-size: 16px;">615x ID</span><br>
                   <div style="margin-top: 6px;">${getStatusBadge(record.status615x)}</div>
                 </td>
-                <td style="padding: 20px 0; text-align: center; color: #475569; font-weight: 500; font-size: 15px;">${record.qty615x} × ৳${record.rate615x}</td>
-                <td style="padding: 20px 0; text-align: right; font-weight: 700; font-size: 16px; color: #0f172a;">৳${record.total615x.toLocaleString('en-US')}</td>
+                <td style="padding: 18px 0; text-align: center; color: #475569; font-weight: 700; font-size: 17px;">${record.qty615x} × ৳${record.rate615x}</td>
+                <td style="padding: 18px 0; text-align: right; font-weight: 800; font-size: 18px;">৳${record.total615x.toLocaleString('en-US')}</td>
               </tr>
+              <tr><td colspan="3" style="border-bottom: 1px solid #f1f5f9;"></td></tr>
               ` : ''}
             </tbody>
           </table>
 
-          <!-- Total Box with Money Icon -->
-          <div style="background: #0f172a; padding: 24px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 16px; font-weight: 600; color: #94a3b8;">
-              <svg style="vertical-align: middle; margin-right: 6px;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg><span style="vertical-align: middle;">Total Amount</span>
-            </span>
-            <span style="font-size: 28px; font-weight: 800; color: #ffffff;">৳${record.grandTotal.toLocaleString('en-US')}</span>
-          </div>
+          <!-- Grand Total Bar -->
+          <table style="width: 100%; background: #0f172a; border-radius: 14px; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 24px 30px; color: #94a3b8; font-size: 18px; font-weight: 700; vertical-align: middle;">
+                 TOTAL AMOUNT
+              </td>
+              <td style="padding: 24px 30px; color: #ffffff; font-size: 32px; font-weight: 900; text-align: right; vertical-align: middle;">
+                ৳${record.grandTotal.toLocaleString('en-US')}
+              </td>
+            </tr>
+          </table>
 
-          <!-- Footer with Verified Icon -->
-          <div style="text-align: center; margin-top: 40px; padding-top: 24px; border-top: 1px dashed #cbd5e1;">
-            <p style="margin: 0 0 6px 0; font-size: 14px; font-weight: 600; color: #475569; text-align: center;">
-              <svg style="vertical-align: middle; margin-right: 4px;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg><span style="vertical-align: middle;">Payment verified successfully</span>
-            </p>
-            <p style="margin: 0; font-size: 14px; color: #94a3b8;">Generated by <span style="color: #2563eb; font-weight: 700;">Eiyan Khan</span></p>
-          </div>
+          <!-- Footer Area -->
+          <table style="width: 100%; margin-top: 50px; border-top: 1.5px dashed #cbd5e1; border-collapse: collapse;">
+            <tr>
+              <td style="padding-top: 30px; text-align: center;">
+                <div style="display: inline-block; margin-bottom: 6px;">
+                  <span style="font-size: 15px; font-weight: 700; color: #475569; vertical-align: middle;">${isFullyPaid ? 'Payment verified successfully' : 'Payment unverified'}</span>
+                </div>
+                <p style="margin: 0; font-size: 14px; color: #94a3b8; font-weight: 600;">Generated by <span style="color: #2563eb; font-weight: 800;">Eiyan Khan</span></p>
+              </td>
+            </tr>
+          </table>
           
         </div>
       `;
@@ -641,155 +687,25 @@
       document.body.appendChild(wrapper);
 
       try {
-        const canvas = await html2canvas(wrapper.querySelector('#receiptContent'), { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
-        
+        const canvas = await html2canvas(wrapper.querySelector('#receiptContent'), { 
+          scale: 2.5, 
+          useCORS: true, 
+          logging: false,
+          backgroundColor: "#ffffff"
+        });
         const link = document.createElement('a');
-        link.download = `Receipt_${record.userName.replace(/\s+/g, '_')}_${record.id}.png`;
-        link.href = imgData;
+        link.download = `Receipt_${record.userName.replace(/\s+/g, '_')}.png`;
+        link.href = canvas.toDataURL('image/png');
         link.click();
-      } catch(err) {
-        console.error("Receipt Gen Error", err);
-        alert("Failed to generate receipt");
-      } finally {
-        document.body.removeChild(wrapper);
+      } catch(err) { 
+        console.error(err); 
+        showToast("Error generating receipt", "error");
       }
+      document.body.removeChild(wrapper);
     };
 
-    searchInput.addEventListener('input', () => {
-      renderRecords();
-    });
-
-    const renderRecords = () => {
-      const searchTerm = searchInput.value.toLowerCase().trim();
-      const filteredRecords = recordsData.filter(record => {
-        return record.date.toLowerCase().includes(searchTerm) || 
-               record.userName.toLowerCase().includes(searchTerm);
-      });
-
-      recordCount.innerText = filteredRecords.length;
-
-      if (filteredRecords.length === 0) {
-        emptyState.classList.remove('hidden');
-        recordsContainer.innerHTML = '';
-        
-        if (searchTerm && recordsData.length > 0) {
-          emptyState.querySelector('p.font-medium').innerText = "No records found matching your search.";
-          emptyState.querySelector('p.text-sm').innerText = "Try searching with a different date or name.";
-        } else {
-          emptyState.querySelector('p.font-medium').innerText = "No payment records found.";
-          emptyState.querySelector('p.text-sm').innerText = "Add a new payment from the left panel.";
-        }
-        return;
-      }
-      
-      emptyState.classList.add('hidden');
-      
-      let html = '';
-      filteredRecords.forEach(record => {
-        const renderActionSection = (type, total, status) => {
-          if(total === 0) return '';
-          
-          let actionHTML = '';
-          if(status === 'Pending') {
-            actionHTML = `
-              <div class="flex items-center gap-1.5 w-full sm:w-auto mt-2 sm:mt-0">
-                <button onclick="updateStatus(${record.id}, '${type}', 'Paid')" class="flex-1 sm:flex-none px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-bold transition-colors shadow-sm active:scale-95"><i class="fa-solid fa-check"></i> Accept</button>
-                <button onclick="updateStatus(${record.id}, '${type}', 'Rejected')" class="flex-1 sm:flex-none px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 rounded text-xs font-bold transition-colors active:scale-95"><i class="fa-solid fa-xmark"></i> Reject</button>
-              </div>
-            `;
-          } else {
-            const badgeClass = status === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
-            const icon = status === 'Paid' ? 'fa-check-circle' : 'fa-times-circle';
-            actionHTML = `
-              <span class="px-3 py-1 text-xs font-bold rounded-full ${badgeClass} mt-2 sm:mt-0 flex items-center gap-1">
-                <i class="fa-solid ${icon}"></i> ${status}
-              </span>
-            `;
-          }
-
-          const colors = type === '1000x' ? 'bg-blue-50/50 border-blue-100 text-blue-800' : 'bg-purple-50/50 border-purple-100 text-purple-800';
-          const qty = type === '1000x' ? record.qty1000x : record.qty615x;
-          const rate = type === '1000x' ? record.rate1000x : record.rate615x;
-
-          return `
-            <div class="flex flex-col sm:flex-row justify-between sm:items-center p-3 rounded-xl border ${colors}">
-              <div>
-                <span class="font-bold text-sm block mb-0.5"><i class="fa-solid fa-tag opacity-50 mr-1"></i> ${type} ID Calc:</span>
-                <div class="text-sm text-slate-700">
-                  ${qty} × ৳${rate} = <span class="font-bold">৳${total.toLocaleString('en-US')}</span>
-                </div>
-              </div>
-              ${actionHTML}
-            </div>
-          `;
-        };
-
-        let methodBadge = '';
-        if (record.method === 'bKash') {
-          methodBadge = '<span class="bg-pink-100 text-pink-700 px-2 py-0.5 rounded text-xs font-bold"><i class="fa-solid fa-paper-plane mr-1"></i>bKash</span>';
-        } else if (record.method === 'Nagad') {
-          methodBadge = '<span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-xs font-bold"><i class="fa-solid fa-bolt mr-1"></i>Nagad</span>';
-        } else if (record.method === 'Rocket') {
-          methodBadge = '<span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-xs font-bold"><i class="fa-solid fa-rocket mr-1"></i>Rocket</span>';
-        } else if (record.method === 'Binance') {
-          methodBadge = '<span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-xs font-bold"><i class="fa-solid fa-coins mr-1"></i>Binance</span>';
-        } else {
-          methodBadge = `<span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-bold">${record.method}</span>`;
-        }
-
-        html += `
-          <div id="record-${record.id}" class="animate-scale-in bg-white rounded-2xl shadow-sm border border-slate-200 hover:border-blue-300 hover:shadow-md hover:-translate-y-1 transition-all duration-300 p-4 md:p-5">
-            <div class="flex justify-between items-start mb-4 border-b border-slate-100 pb-4">
-              <div>
-                <h3 class="text-lg md:text-xl font-bold text-slate-900">${record.userName}</h3>
-                <div class="flex flex-wrap items-center gap-2 mt-1.5">
-                  ${methodBadge}
-                  <span class="text-sm font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">${record.number}</span>
-                </div>
-                <div class="flex flex-wrap items-center gap-2 mt-2.5">
-                  <div class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold rounded-md">
-                    <i class="fa-regular fa-calendar"></i> ${record.date}
-                  </div>
-                  ${record.trxId ? `
-                  <div class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold font-mono rounded-md">
-                    TrxID: ${record.trxId}
-                  </div>
-                  ` : ''}
-                </div>
-              </div>
-              
-              <div class="flex gap-1">
-                <button onclick="editRecord(${record.id})" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 hover:scale-110 active:scale-90 rounded-lg transition-all duration-200" title="Edit Record">
-                  <i class="fa-regular fa-pen-to-square"></i>
-                </button>
-                <button onclick="deleteRecord(${record.id})" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 hover:scale-110 active:scale-90 rounded-lg transition-all duration-200" title="Delete Record">
-                  <i class="fa-regular fa-trash-can"></i>
-                </button>
-              </div>
-            </div>
-            <div class="space-y-3">
-              ${renderActionSection('1000x', record.total1000x, record.status1000x)}
-              ${renderActionSection('615x', record.total615x, record.status615x)}
-            </div>
-            <div class="mt-5 pt-4 border-t border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Grand Total</span>
-                <div class="text-2xl font-black text-slate-900 leading-none mt-1">৳${record.grandTotal.toLocaleString('en-US')}</div>
-              </div>
-              <button onclick="downloadReceipt(${record.id})" class="w-full md:w-auto px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold rounded-xl transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2">
-                <i class="fa-solid fa-file-arrow-down"></i> Download Receipt
-              </button>
-            </div>
-          </div>
-        `;
-      });
-
-      recordsContainer.innerHTML = html;
-    };
-
+    document.getElementById('searchInput').addEventListener('input', renderRecords);
     loadData();
-
   </script>
 </body>
 </html>
