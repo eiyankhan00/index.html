@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Payment Tracker</title>
   
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <!-- html2canvas for Image Download -->
@@ -19,6 +22,12 @@
     :root {
       --primary: #4f46e5;
       --bg-color: #f1f5f9;
+    }
+
+    /* মোবাইল স্ক্রিনের উচ্চতা ফিক্স করার জন্য আধুনিক CSS */
+    html, body {
+      height: 100%;
+      height: 100dvh; /* Dynamic Viewport Height */
     }
 
     body {
@@ -66,7 +75,7 @@
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
-<body class="text-slate-800 antialiased h-screen flex flex-col overflow-hidden">
+<body class="text-slate-800 antialiased flex flex-col overflow-hidden">
 
   <!-- Top App Bar -->
   <header class="bg-indigo-600 text-white pt-10 pb-4 px-5 shadow-md flex justify-between items-center z-10 shrink-0">
@@ -87,7 +96,8 @@
   </header>
 
   <!-- Main Scrollable Content -->
-  <main class="flex-1 overflow-y-auto pb-24 px-4 pt-5" id="main-scroll">
+  <!-- pb-32 দেওয়া হয়েছে যেন বাটনটি নিচের মেনুর কারণে ঢেকে না যায় -->
+  <main class="flex-1 overflow-y-auto pb-32 px-4 pt-5" id="main-scroll">
     
     <div id="tab-new" class="tab-content active space-y-5 max-w-md mx-auto">
       <form id="paymentForm" class="space-y-5">
@@ -198,14 +208,13 @@
     </div>
   </main>
 
-  <nav class="bg-white border-t border-slate-200 flex justify-around items-center pb-safe pt-2 pb-2 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20 relative">
-    <style> .pb-safe { padding-bottom: env(safe-area-inset-bottom, 16px); } </style>
-    
-    <button onclick="switchTab('new')" id="nav-new" class="nav-item active flex flex-col items-center gap-1 w-20 pt-2 pb-1">
+  <!-- Bottom Navigation (Fixed Height) -->
+  <nav class="bg-white border-t border-slate-200 flex justify-around items-center pt-3 pb-5 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20 relative">
+    <button onclick="switchTab('new')" id="nav-new" class="nav-item active flex flex-col items-center gap-1 w-20 pt-1">
       <div class="nav-icon-bg flex flex-col items-center"><i class="fa-solid fa-plus text-lg"></i></div>
       <span class="text-[10px] font-bold uppercase mt-1">New Entry</span>
     </button>
-    <button onclick="switchTab('history')" id="nav-history" class="nav-item flex flex-col items-center gap-1 w-20 pt-2 pb-1">
+    <button onclick="switchTab('history')" id="nav-history" class="nav-item flex flex-col items-center gap-1 w-20 pt-1">
       <div class="nav-icon-bg flex flex-col items-center"><i class="fa-solid fa-list text-lg"></i></div>
       <span class="text-[10px] font-bold uppercase mt-1">History</span>
     </button>
@@ -237,8 +246,7 @@
     let recordsData = [];
     let editingId = null;
 
-    // --- ID Generation Logic ---
-    // Finds the maximum ID currently in records and adds 1. Starts at 1.
+    // --- ID Generation Logic (Hidden from UI) ---
     const getNextId = () => {
       if (recordsData.length === 0) return 1;
       const ids = recordsData.map(r => Number(r.id) || 0);
@@ -359,7 +367,7 @@
       
       const filtered = recordsData.filter(r => 
         (r.displayDate && r.displayDate.toLowerCase().includes(term)) || 
-        r.userName.toLowerCase().includes(term) || r.number.includes(term) || String(r.id) === term
+        r.userName.toLowerCase().includes(term) || r.number.includes(term)
       );
       
       recordCount.innerText = filtered.length;
@@ -394,9 +402,7 @@
             <div class="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500"></div>
             <div class="flex justify-between items-start mb-2">
               <div>
-                <h3 class="text-base font-bold text-slate-800 leading-tight">
-                  ${record.userName}
-                </h3>
+                <h3 class="text-base font-bold text-slate-800 leading-tight">${record.userName}</h3>
                 <p class="text-[11px] text-slate-500 font-medium mt-0.5"><i class="fa-regular fa-calendar-days"></i> ${record.displayDate}</p>
               </div>
               <div class="text-right">
@@ -492,7 +498,7 @@
       const formattedDate = formatDate(rawDate);
 
       const recordToSave = {
-        id: editingId || getNextId(), // Now generates sequential ID starting from 1
+        id: editingId || getNextId(), // Generates sequential ID starting from 1
         date: rawDate,
         displayDate: formattedDate,
         userName: userNameInput.value,
@@ -716,7 +722,7 @@
       try {
         const canvas = await html2canvas(wrapper.querySelector('#receiptContent'), { scale: 2.5, useCORS: true, logging: false, backgroundColor: "#ffffff" });
         const link = document.createElement('a');
-        link.download = `Receipt_${record.userName.replace(/\s+/g, '_')}_${record.id}.png`;
+        link.download = `Receipt_${record.userName.replace(/\s+/g, '_')}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
       } catch(err) { 
@@ -746,8 +752,8 @@
 
       const element = wrapper.querySelector('#receiptContent');
       const opt = {
-        margin:       0.2, // 0.2 inch margins
-        filename:     `Receipt_${record.userName.replace(/\s+/g, '_')}_${record.id}.pdf`,
+        margin:       0.2,
+        filename:     `Receipt_${record.userName.replace(/\s+/g, '_')}.pdf`,
         image:        { type: 'jpeg', quality: 1 },
         html2canvas:  { scale: 2, useCORS: true },
         jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
