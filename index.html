@@ -17,7 +17,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
     
     :root {
       --primary: #0ea5e9;
@@ -221,9 +221,15 @@
         </div>
       </div>
 
+      <!-- Header with Receipt Theme Toggle -->
       <div class="flex justify-between items-center px-1">
-        <h2 class="text-sm font-bold text-slate-300">Saved Records</h2>
-        <span id="recordCount" class="bg-sky-500/20 border border-sky-500/30 text-sky-400 text-xs font-bold px-2 py-1 rounded-full">0</span>
+        <div class="flex items-center gap-2">
+          <h2 class="text-sm font-bold text-slate-300">Saved Records</h2>
+          <span id="recordCount" class="bg-sky-500/20 border border-sky-500/30 text-sky-400 text-xs font-bold px-2 py-1 rounded-full">0</span>
+        </div>
+        <button onclick="toggleReceiptTheme()" id="themeToggleBtn" class="text-[10px] bg-[#1e293b] text-sky-400 border border-sky-500/30 px-3 py-1.5 rounded-full font-bold active:bg-[#334155] transition-colors flex items-center gap-1.5">
+          <i class="fa-solid fa-moon"></i> Dark Receipt
+        </button>
       </div>
 
       <div id="emptyState" class="hidden bg-[#1e293b] p-10 text-center rounded-2xl border border-[#334155] shadow-sm mt-4">
@@ -267,6 +273,8 @@
   </div>
 
   <script>
+    const apiKey = ""; // Added to prevent environment injection syntax error
+
     // ==========================================
     // GOOGLE SHEETS URL
     // ==========================================
@@ -275,6 +283,23 @@
     const STORAGE_KEY = 'paymentTrackerMobile_Data';
     let recordsData = [];
     let editingId = null;
+
+    // --- Theme Toggle Logic ---
+    let receiptTheme = 'dark'; // Default to dark theme
+    window.toggleReceiptTheme = () => {
+      const btn = document.getElementById('themeToggleBtn');
+      if(receiptTheme === 'dark') {
+        receiptTheme = 'light';
+        btn.innerHTML = '<i class="fa-solid fa-sun"></i> Light Receipt';
+        btn.className = "text-[10px] bg-slate-200 text-slate-700 border border-slate-300 px-3 py-1.5 rounded-full font-bold active:bg-slate-300 transition-colors flex items-center gap-1.5 shadow-sm";
+        showToast("Light Theme Selected", "success");
+      } else {
+        receiptTheme = 'dark';
+        btn.innerHTML = '<i class="fa-solid fa-moon"></i> Dark Receipt';
+        btn.className = "text-[10px] bg-[#1e293b] text-sky-400 border border-sky-500/30 px-3 py-1.5 rounded-full font-bold active:bg-[#334155] transition-colors flex items-center gap-1.5";
+        showToast("Dark Theme Selected", "success");
+      }
+    };
 
     const getNextId = () => {
       if (recordsData.length === 0) return 1;
@@ -300,7 +325,6 @@
       }
     };
 
-    // Clean and Normalize Data from Sheets (Fixes timezones and missing zeros)
     const normalizeDateData = (records) => {
       return records.map(r => {
         let raw = r.displayDate || r.date; 
@@ -327,7 +351,6 @@
           }
         }
         
-        // Fix missing leading zero in numbers from sheet
         let numStr = String(r.number || '').replace(/[^0-9+]/g, '');
         if(numStr.length === 10 && !numStr.startsWith('+')) numStr = '0' + numStr;
 
@@ -421,19 +444,16 @@
       closeConfirmModal();
     });
 
-    // --- Details Toggle with Animation ---
     window.toggleDetails = (id) => {
       const detailsDiv = document.getElementById(`details-${id}`);
       const icon = document.getElementById(`icon-${id}`);
       
-      // Check if it is collapsed (maxHeight is '0px' or not set)
       if (detailsDiv.style.maxHeight === '0px' || !detailsDiv.style.maxHeight) {
-        detailsDiv.style.marginTop = '12px'; // Adds top margin
-        detailsDiv.style.maxHeight = detailsDiv.scrollHeight + 50 + 'px'; // Expands smoothly based on content
+        detailsDiv.style.marginTop = '12px';
+        detailsDiv.style.maxHeight = detailsDiv.scrollHeight + 50 + 'px';
         detailsDiv.style.opacity = '1';
         icon.style.transform = 'rotate(180deg)';
       } else {
-        // Collapse it back
         detailsDiv.style.maxHeight = '0px';
         detailsDiv.style.opacity = '0';
         detailsDiv.style.marginTop = '0px';
@@ -448,7 +468,6 @@
       renderRecords();
     };
 
-    // --- Hide/Show Search Bar on Scroll ---
     let lastScrollTop = 0;
     const mainScroll = document.getElementById('main-scroll');
     
@@ -468,13 +487,12 @@
       lastScrollTop = st <= 0 ? 0 : st;
     }, { passive: true });
 
-    // --- Filter rendering ---
     const renderRecords = () => {
       const recordsContainer = document.getElementById('recordsContainer');
       const recordCount = document.getElementById('recordCount');
       
       const nameTerm = document.getElementById('searchName').value.toLowerCase().trim();
-      const numTerm = document.getElementById('searchNumber').value.replace(/\D/g, ''); // Keep only digits
+      const numTerm = document.getElementById('searchNumber').value.replace(/\D/g, ''); 
       const dateTerm = document.getElementById('searchDate').value;
       
       const filtered = recordsData.filter(r => {
@@ -484,8 +502,7 @@
 
         if (nameTerm) {
           const uName = String(r.userName || '').toLowerCase();
-          const uId = String(r.id || '');
-          matchName = uName.includes(nameTerm) || uId.includes(nameTerm);
+          matchName = uName.includes(nameTerm);
         }
         if (numTerm) {
           const uNum = String(r.number || '');
@@ -512,7 +529,7 @@
         const renderAction = (type, total, status) => {
           if(total === 0) return '';
           let isPaid = status === 'Paid';
-          let statusBadge = `<span class="px-2 py-0.5 text-[10px] font-bold rounded flex items-center gap-1 ${isPaid ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}"><i class="fa-solid ${isPaid ? 'fa-check' : 'fa-clock'}"></i> ${status}</span>`;
+          let statusBadge = `<span class="text-[11px] font-black tracking-wider uppercase flex items-center gap-1 ${isPaid ? 'text-emerald-400' : 'text-amber-400'}"><i class="fa-solid ${isPaid ? 'fa-check-double' : 'fa-hourglass-half'}"></i> ${status}</span>`;
           
           let actionBtns = status === 'Pending' ? `
             <div class="flex gap-2 mt-2 w-full">
@@ -738,113 +755,138 @@
     document.getElementById('searchDate').addEventListener('change', renderRecords);
 
     // ==========================================
-    // HTML GENERATOR FOR RECEIPTS 
+    // MODERN HTML GENERATOR FOR RECEIPTS 
     // ==========================================
     const generateReceiptHTML = (record, isFullyPaid) => {
+      // Dynamic Theme Palette
+      const t = receiptTheme === 'dark' ? {
+        bg: '#0f172a',
+        text: '#f8fafc',
+        muted: '#94a3b8',
+        border: '#334155',
+        cardBg: '#1e293b',
+        primary: '#0ea5e9',
+        totalBg: '#0ea5e9',
+        totalText: '#ffffff',
+        trxBg: '#022c22',
+        trxBorder: '#059669',
+        trxText: '#34d399',
+        badgePaidBg: '#064e3b',
+        badgePaidText: '#34d399',
+        badgePendingBg: '#451a03',
+        badgePendingText: '#fbbf24'
+      } : {
+        bg: '#ffffff',
+        text: '#0f172a',
+        muted: '#64748b',
+        border: '#e2e8f0',
+        cardBg: '#f8fafc',
+        primary: '#2563eb',
+        totalBg: '#0f172a',
+        totalText: '#ffffff',
+        trxBg: '#ecfdf5',
+        trxBorder: '#10b981',
+        trxText: '#047857',
+        badgePaidBg: '#dcfce7',
+        badgePaidText: '#059669',
+        badgePendingBg: '#fef3c7',
+        badgePendingText: '#d97706'
+      };
+
+      const overallStatus = isFullyPaid 
+        ? `<div style="color: ${t.badgePaidText}; font-size: 14px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px;">✓ PAID IN FULL</div>` 
+        : `<div style="color: ${t.badgePendingText}; font-size: 14px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px;">⏱ PAYMENT PENDING</div>`;
+
       return `
-        <div id="receiptContent" style="width: 540px; padding: 40px; background: #ffffff; font-family: 'Inter', sans-serif; color: #0f172a;">
-          <table style="width: 100%; border-bottom: 2px solid #f1f5f9; padding-bottom: 25px; margin-bottom: 30px; border-collapse: collapse;">
+        <div id="receiptContent" style="width: 540px; padding: 40px; background: ${t.bg}; font-family: 'Inter', sans-serif; color: ${t.text}; border: 1px solid ${t.border}; box-sizing: border-box;">
+          
+          <!-- Header -->
+          <table style="width: 100%; border-bottom: 2px dashed ${t.border}; padding-bottom: 25px; margin-bottom: 30px; border-collapse: collapse;">
             <tr>
               <td style="vertical-align: middle;">
-                <h1 style="margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">RECEIPT</h1>
-                <div style="margin-top: 4px;">
-                  ${isFullyPaid 
-                    ? '<span style="color: #059669; font-size: 14px; font-weight: 800; letter-spacing: 0.5px;">Payment Confirmed</span>' 
-                    : '<span style="color: #d97706; font-size: 14px; font-weight: 800; letter-spacing: 0.5px;">Payment Pending</span>'}
-                </div>
+                <h1 style="margin: 0 0 8px 0; font-size: 32px; font-weight: 900; letter-spacing: -1px; color: ${t.primary};">RECEIPT</h1>
+                ${overallStatus}
               </td>
               <td style="vertical-align: middle; text-align: right;">
-                <div style="color: #64748b; font-size: 10px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-bottom: 4px;">DATE</div>
-                <div style="font-size: 16px; font-weight: 800; color: #0f172a;">${record.displayDate || 'N/A'}</div>
+                <div style="color: ${t.muted}; font-size: 10px; text-transform: uppercase; font-weight: 800; letter-spacing: 1.5px; margin-bottom: 4px;">Date</div>
+                <div style="font-size: 16px; font-weight: 800; color: ${t.text};">${record.displayDate || 'N/A'}</div>
               </td>
             </tr>
           </table>
 
+          <!-- Transaction ID -->
           ${record.trxId ? `
-          <table style="width: 100%; margin-bottom: 30px; border-collapse: collapse;">
-            <tr>
-              <td style="background: #ecfdf5; border: 1.5px dashed #10b981; padding: 18px; border-radius: 12px; text-align: center;">
-                <p style="margin: 0; color: #047857; font-size: 12px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-bottom: 4px;">TRANSACTION ID</p>
-                <p style="margin: 0; font-size: 20px; font-weight: 800; color: #064e3b; font-family: monospace;">${record.trxId}</p>
-              </td>
-            </tr>
-          </table>
+          <div style="background: ${t.trxBg}; border: 1px dashed ${t.trxBorder}; padding: 16px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
+            <p style="margin: 0; color: ${t.trxBorder}; font-size: 11px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-bottom: 4px;">Transaction ID</p>
+            <p style="margin: 0; font-size: 20px; font-weight: 800; color: ${t.trxText}; font-family: monospace; letter-spacing: 1px;">${record.trxId}</p>
+          </div>
           ` : ''}
 
-          <table style="width: 100%; background: #f8fafc; border-radius: 12px; border: 1.5px solid #e2e8f0; margin-bottom: 40px; border-collapse: collapse;">
+          <!-- Customer & Account -->
+          <table style="width: 100%; background: ${t.cardBg}; border-radius: 16px; margin-bottom: 35px; border-collapse: collapse; overflow: hidden;">
             <tr>
-              <td style="width: 50%; padding: 25px; border-right: 2px solid #e2e8f0; text-align: center; vertical-align: top;">
-                <p style="margin: 0 0 8px 0; color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 800;">CUSTOMER NAME</p>
-                <p style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">${record.userName}</p>
+              <td style="width: 50%; padding: 24px; border-right: 1px solid ${t.border}; vertical-align: top;">
+                <p style="margin: 0 0 8px 0; color: ${t.muted}; font-size: 10px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Billed To</p>
+                <p style="margin: 0; font-size: 20px; font-weight: 800; color: ${t.text}; line-height: 1.3;">${record.userName}</p>
               </td>
-              <td style="width: 50%; padding: 25px; text-align: center; vertical-align: top;">
-                <p style="margin: 0 0 8px 0; color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 800;">ACCOUNT DETAILS</p>
-                <p style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 2px;">${record.method}</p>
-                <p style="margin: 0; color: #2563eb; font-weight: 900; font-size: 18px; font-family: monospace;">${record.number}</p>
+              <td style="width: 50%; padding: 24px; vertical-align: top;">
+                <p style="margin: 0 0 8px 0; color: ${t.muted}; font-size: 10px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Payment Method</p>
+                <p style="margin: 0; font-size: 18px; font-weight: 800; color: ${t.text}; margin-bottom: 4px;">${record.method}</p>
+                <p style="margin: 0; color: ${t.primary}; font-weight: 800; font-size: 16px; font-family: monospace; letter-spacing: 1px;">${record.number}</p>
               </td>
             </tr>
           </table>
 
+          <!-- Items Table -->
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
             <tr>
-              <td style="padding-bottom: 12px; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 800;">ITEM DETAILS</td>
-              <td style="padding-bottom: 12px; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 800; text-align: center; width: 150px;">QTY X RATE</td>
-              <td style="padding-bottom: 12px; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 800; text-align: right; width: 100px;">TOTAL</td>
+              <td style="padding-bottom: 12px; font-size: 11px; color: ${t.muted}; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; border-bottom: 2px solid ${t.border};">Item Details</td>
+              <td style="padding-bottom: 12px; font-size: 11px; color: ${t.muted}; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; text-align: center; width: 140px; border-bottom: 2px solid ${t.border};">Qty × Rate</td>
+              <td style="padding-bottom: 12px; font-size: 11px; color: ${t.muted}; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; text-align: right; width: 110px; border-bottom: 2px solid ${t.border};">Subtotal</td>
             </tr>
           </table>
-          <div style="border-bottom: 2px solid #e2e8f0; margin-bottom: 15px;"></div>
 
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 40px;">
             <tbody>
               ${record.total1000x > 0 ? `
               <tr>
-                <td style="padding: 18px 0; vertical-align: middle;">
-                  <span style="font-weight: 800; font-size: 16px;">1000x ID</span><br>
-                  <div style="margin-top: 6px;">
-                    <span style="color: ${record.status1000x === 'Paid' ? '#059669' : '#d97706'}; font-weight: 800; font-size: 11px; letter-spacing: 0.5px;">${record.status1000x === 'Paid' ? 'PAID' : 'PENDING'}</span>
-                  </div>
+                <td style="padding: 20px 0; border-bottom: 1px solid ${t.border}; vertical-align: middle;">
+                  <div style="font-weight: 800; font-size: 16px; color: ${t.text}; margin-bottom: 6px;">1000x ID</div>
+                  <div><span style="color: ${record.status1000x === 'Paid' ? t.badgePaidText : t.badgePendingText}; font-weight: 900; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;">${record.status1000x === 'Paid' ? '✓ PAID' : '⏱ PENDING'}</span></div>
                 </td>
-                <td style="padding: 18px 0; text-align: center; color: #475569; font-weight: 700; font-size: 17px;">${record.qty1000x} <span style="margin: 0 8px; color: #94a3b8; font-weight: 500;">×</span> ৳${record.rate1000x}</td>
-                <td style="padding: 18px 0; text-align: right; font-weight: 800; font-size: 18px;">৳${record.total1000x.toLocaleString('en-US')}</td>
+                <td style="padding: 20px 0; border-bottom: 1px solid ${t.border}; text-align: center; color: ${t.text}; font-weight: 700; font-size: 15px;">${record.qty1000x} <span style="color: ${t.muted}; font-size: 14px; margin: 0 4px;">×</span> ৳${record.rate1000x}</td>
+                <td style="padding: 20px 0; border-bottom: 1px solid ${t.border}; text-align: right; font-weight: 800; font-size: 17px; color: ${t.text};">৳${record.total1000x.toLocaleString('en-US')}</td>
               </tr>
-              <tr><td colspan="3" style="border-bottom: 1px solid #f1f5f9;"></td></tr>
               ` : ''}
               ${record.total615x > 0 ? `
               <tr>
-                <td style="padding: 18px 0; vertical-align: middle;">
-                  <span style="font-weight: 800; font-size: 16px;">615x ID</span><br>
-                  <div style="margin-top: 6px;">
-                    <span style="color: ${record.status615x === 'Paid' ? '#059669' : '#d97706'}; font-weight: 800; font-size: 11px; letter-spacing: 0.5px;">${record.status615x === 'Paid' ? 'PAID' : 'PENDING'}</span>
-                  </div>
+                <td style="padding: 20px 0; border-bottom: 1px solid ${t.border}; vertical-align: middle;">
+                  <div style="font-weight: 800; font-size: 16px; color: ${t.text}; margin-bottom: 6px;">615x ID</div>
+                  <div><span style="color: ${record.status615x === 'Paid' ? t.badgePaidText : t.badgePendingText}; font-weight: 900; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;">${record.status615x === 'Paid' ? '✓ PAID' : '⏱ PENDING'}</span></div>
                 </td>
-                <td style="padding: 18px 0; text-align: center; color: #475569; font-weight: 700; font-size: 17px;">${record.qty615x} <span style="margin: 0 8px; color: #94a3b8; font-weight: 500;">×</span> ৳${record.rate615x}</td>
-                <td style="padding: 18px 0; text-align: right; font-weight: 800; font-size: 18px;">৳${record.total615x.toLocaleString('en-US')}</td>
+                <td style="padding: 20px 0; border-bottom: 1px solid ${t.border}; text-align: center; color: ${t.text}; font-weight: 700; font-size: 15px;">${record.qty615x} <span style="color: ${t.muted}; font-size: 14px; margin: 0 4px;">×</span> ৳${record.rate615x}</td>
+                <td style="padding: 20px 0; border-bottom: 1px solid ${t.border}; text-align: right; font-weight: 800; font-size: 17px; color: ${t.text};">৳${record.total615x.toLocaleString('en-US')}</td>
               </tr>
-              <tr><td colspan="3" style="border-bottom: 1px solid #f1f5f9;"></td></tr>
               ` : ''}
             </tbody>
           </table>
 
-          <table style="width: 100%; background: #0f172a; border-radius: 14px; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 24px 30px; color: #94a3b8; font-size: 18px; font-weight: 700; vertical-align: middle;">TOTAL AMOUNT</td>
-              <td style="padding: 24px 30px; color: #ffffff; font-size: 32px; font-weight: 900; text-align: right; vertical-align: middle;">৳${record.grandTotal.toLocaleString('en-US')}</td>
-            </tr>
-          </table>
+          <!-- Grand Total -->
+          <div style="background: ${t.totalBg}; border-radius: 16px; padding: 24px 30px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; box-shadow: 0 10px 25px rgba(14, 165, 233, 0.2);">
+            <div style="color: rgba(255,255,255,0.8); font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Total Amount</div>
+            <div style="color: ${t.totalText}; font-size: 34px; font-weight: 900; letter-spacing: -1px;">৳${record.grandTotal.toLocaleString('en-US')}</div>
+          </div>
 
-          <table style="width: 100%; margin-top: 50px; border-top: 1.5px dashed #cbd5e1; border-collapse: collapse;">
-            <tr>
-              <td style="padding-top: 30px; text-align: center;">
-                <div style="display: inline-block; margin-bottom: 6px;">
-                  <span style="font-size: 15px; font-weight: 700; color: #475569;">${isFullyPaid ? 'Payment verified successfully' : 'Payment unverified'}</span>
-                </div>
-                <p style="margin: 0; font-size: 14px; color: #94a3b8; font-weight: 600;">Generated by <span style="color: #2563eb; font-weight: 800;">Eiyan Khan</span></p>
-              </td>
-            </tr>
-          </table>
+          <!-- Footer -->
+          <div style="text-align: center; border-top: 2px dashed ${t.border}; pt-8; padding-top: 30px;">
+            <div style="display: inline-block; margin-bottom: 8px;">
+              <span style="font-size: 14px; font-weight: 800; color: ${t.text}; letter-spacing: 0.5px;">${isFullyPaid ? 'Payment Verified Successfully' : 'Payment Unverified'}</span>
+            </div>
+            <p style="margin: 0; font-size: 12px; color: ${t.muted}; font-weight: 600;">Generated Securely by <span style="color: ${t.primary}; font-weight: 800;">MK NETWORK</span></p>
+          </div>
         </div>
       `;
-    }
+    };
 
     window.downloadReceipt = async (id) => {
       const record = recordsData.find(r => r.id === id);
@@ -862,7 +904,8 @@
       document.body.appendChild(wrapper);
 
       try {
-        const canvas = await html2canvas(wrapper.querySelector('#receiptContent'), { scale: 2.5, useCORS: true, logging: false, backgroundColor: "#ffffff" });
+        const bgVal = receiptTheme === 'dark' ? '#0f172a' : '#ffffff';
+        const canvas = await html2canvas(wrapper.querySelector('#receiptContent'), { scale: 2.5, useCORS: true, logging: false, backgroundColor: bgVal });
         const link = document.createElement('a');
         link.download = `Receipt_${record.userName.replace(/\s+/g, '_')}.png`;
         link.href = canvas.toDataURL('image/png');
