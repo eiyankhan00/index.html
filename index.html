@@ -97,12 +97,12 @@
       </div>
       <p class="text-sky-400 text-xs font-medium" id="syncStatus"><i class="fa-solid fa-arrows-rotate fa-spin"></i> Initializing...</p>
     </div>
-    <div class="bg-sky-500/20 text-sky-400 h-10 w-10 rounded-full flex items-center justify-center font-bold font-mono text-sm border border-sky-500/30" title="Next ID">
-      ID: <span id="headerNextId">1</span>
+    <div class="bg-[#0b1120] border border-[#334155] h-10 w-10 rounded-full flex items-center justify-center">
+      <i class="fa-solid fa-user-tie text-slate-400 text-lg"></i>
     </div>
   </header>
 
-  <!-- Main Scrollable Content (Added min-h-0 to fix scrolling) -->
+  <!-- Main Scrollable Content -->
   <main class="flex-1 min-h-0 overflow-y-auto pb-32 px-4 pt-5" id="main-scroll">
     
     <!-- ==================== TAB 1: NEW ENTRY ==================== -->
@@ -198,7 +198,7 @@
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
               <i class="fa-solid fa-user text-xs"></i>
             </div>
-            <input type="text" id="searchName" placeholder="Search by name or ID..." class="w-full pl-8 pr-3 py-2 bg-[#0b1120] border border-[#334155] text-white placeholder-slate-500 rounded-lg focus:border-sky-500 outline-none text-sm">
+            <input type="text" id="searchName" placeholder="Search by name..." class="w-full pl-8 pr-3 py-2 bg-[#0b1120] border border-[#334155] text-white placeholder-slate-500 rounded-lg focus:border-sky-500 outline-none text-sm">
           </div>
           
           <div class="flex gap-2">
@@ -300,6 +300,41 @@
       }
     };
 
+    // Clean and Normalize Data from Sheets (Fixes timezones and missing zeros)
+    const normalizeDateData = (records) => {
+      return records.map(r => {
+        let raw = r.displayDate || r.date; 
+        let standard = '';
+        let display = raw;
+
+        if (raw) {
+          let d;
+          if (typeof raw === 'string' && raw.includes('-') && raw.length === 10) {
+            const parts = raw.split('-');
+            d = new Date(parts[0], parts[1] - 1, parts[2]);
+          } else {
+            d = new Date(raw);
+          }
+
+          if (!isNaN(d.getTime())) {
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            standard = `${yyyy}-${mm}-${dd}`;
+            
+            const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            display = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+          }
+        }
+        
+        // Fix missing leading zero in numbers from sheet
+        let numStr = String(r.number || '').replace(/[^0-9+]/g, '');
+        if(numStr.length === 10 && !numStr.startsWith('+')) numStr = '0' + numStr;
+
+        return { ...r, date: standard, displayDate: display, number: numStr };
+      });
+    };
+
     const syncDataFromSheet = async () => {
       if(!navigator.onLine) {
         updateConnectionUI(false);
@@ -312,7 +347,7 @@
         const result = await response.json();
         
         if (result.status === 'success' && result.data) {
-          recordsData = result.data;
+          recordsData = normalizeDateData(result.data);
           saveLocalData(); 
           updateConnectionUI(true);
         } else {
@@ -329,7 +364,8 @@
 
     const formatDate = (dateString) => {
       if(!dateString) return "";
-      const d = new Date(dateString);
+      const parts = dateString.split('-');
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
       const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
       return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
     };
@@ -414,24 +450,23 @@
       
       let st = mainScroll.scrollTop;
       
-      // If scrolling down and past the top area
       if (st > lastScrollTop && st > 60) {
         searchHeader.style.transform = 'translateY(-120%)';
       } 
-      // If scrolling up
       else {
         searchHeader.style.transform = 'translateY(0)';
       }
       
-      lastScrollTop = st <= 0 ? 0 : st; // For Mobile or negative scrolling
+      lastScrollTop = st <= 0 ? 0 : st;
     }, { passive: true });
 
+    // --- Filter rendering ---
     const renderRecords = () => {
       const recordsContainer = document.getElementById('recordsContainer');
       const recordCount = document.getElementById('recordCount');
       
       const nameTerm = document.getElementById('searchName').value.toLowerCase().trim();
-      const numTerm = document.getElementById('searchNumber').value.trim();
+      const numTerm = document.getElementById('searchNumber').value.replace(/\D/g, ''); // Keep only digits
       const dateTerm = document.getElementById('searchDate').value;
       
       const filtered = recordsData.filter(r => {
@@ -440,15 +475,16 @@
         let matchDate = true;
 
         if (nameTerm) {
-          matchName = (r.userName || '').toLowerCase().includes(nameTerm) || String(r.id) === nameTerm;
+          const uName = String(r.userName || '').toLowerCase();
+          const uId = String(r.id || '');
+          matchName = uName.includes(nameTerm) || uId.includes(nameTerm);
         }
         if (numTerm) {
-          matchNum = (r.number || '').includes(numTerm);
+          const uNum = String(r.number || '');
+          matchNum = uNum.includes(numTerm);
         }
         if (dateTerm) {
-          // Check against raw date or derived display date to ensure loaded sheets data matches
-          const formattedSearchDate = formatDate(dateTerm);
-          matchDate = (r.date === dateTerm) || (r.displayDate === formattedSearchDate);
+          matchDate = (r.date === dateTerm);
         }
 
         return matchName && matchNum && matchDate;
@@ -491,7 +527,6 @@
             <div class="flex justify-between items-start cursor-pointer select-none" onclick="toggleDetails(${record.id})">
               <div>
                 <h3 class="text-base font-bold text-white leading-tight flex items-center gap-2">
-                  <span class="text-[10px] bg-slate-700/50 text-slate-400 px-1.5 py-0.5 rounded border border-slate-600">#${record.id}</span>
                   ${record.userName}
                 </h3>
                 <p class="text-[11px] text-slate-400 font-medium mt-1.5"><i class="fa-regular fa-calendar-days"></i> ${record.displayDate}</p>
@@ -530,7 +565,7 @@
     const loadLocalData = () => {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) recordsData = JSON.parse(saved);
+        if (saved) recordsData = normalizeDateData(JSON.parse(saved));
       } catch (err) {}
       renderRecords();
     };
@@ -643,7 +678,6 @@
       btn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Save Record';
       btn.className = "w-full py-4 bg-sky-500 active:bg-sky-600 text-white font-bold rounded-b-2xl transition-colors shadow-[0_4px_14px_rgba(14,165,233,0.3)] flex justify-center items-center gap-2 text-lg";
       btn.disabled = false;
-      document.getElementById('headerNextId').innerText = getNextId();
       switchTab('history');
     };
 
@@ -663,8 +697,6 @@
       
       calculateTotals();
       switchTab('new');
-      
-      document.getElementById('headerNextId').innerText = id + " (Edit)";
       
       const btn = document.getElementById('submitBtn');
       btn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Update Record';
