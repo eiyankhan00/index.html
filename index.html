@@ -421,14 +421,22 @@
       closeConfirmModal();
     });
 
+    // --- Details Toggle with Animation ---
     window.toggleDetails = (id) => {
       const detailsDiv = document.getElementById(`details-${id}`);
       const icon = document.getElementById(`icon-${id}`);
-      if(detailsDiv.classList.contains('hidden')) {
-        detailsDiv.classList.remove('hidden');
+      
+      // Check if it is collapsed (maxHeight is '0px' or not set)
+      if (detailsDiv.style.maxHeight === '0px' || !detailsDiv.style.maxHeight) {
+        detailsDiv.style.marginTop = '12px'; // Adds top margin
+        detailsDiv.style.maxHeight = detailsDiv.scrollHeight + 50 + 'px'; // Expands smoothly based on content
+        detailsDiv.style.opacity = '1';
         icon.style.transform = 'rotate(180deg)';
       } else {
-        detailsDiv.classList.add('hidden');
+        // Collapse it back
+        detailsDiv.style.maxHeight = '0px';
+        detailsDiv.style.opacity = '0';
+        detailsDiv.style.marginTop = '0px';
         icon.style.transform = 'rotate(0deg)';
       }
     };
@@ -539,21 +547,23 @@
               </div>
             </div>
             
-            <!-- Hidden Details Section -->
-            <div id="details-${record.id}" class="hidden mt-3 pt-3 border-t border-[#334155]">
-              <div class="flex items-center gap-2 mb-3">
-                <span class="${mBadge} px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide">${record.method}</span>
-                <span class="text-xs font-mono font-bold text-slate-300">${record.number}</span>
-              </div>
-              ${record.trxId ? `<div class="bg-[#0b1120] border border-[#334155] rounded-md px-2 py-1.5 text-[11px] font-mono text-slate-400 mb-2">TrxID: <span class="text-white font-semibold">${record.trxId}</span></div>` : ''}
-              
-              <div class="mb-4">${renderAction('1000x', record.total1000x, record.status1000x)}${renderAction('615x', record.total615x, record.status615x)}</div>
-              
-              <div class="grid grid-cols-4 gap-2 border-t border-[#334155] pt-3">
-                <button onclick="editRecord(${record.id})" class="col-span-1 py-2 bg-[#0b1120] text-slate-300 text-[10px] font-bold rounded-lg border border-[#334155] active:bg-slate-700 transition-colors"><i class="fa-solid fa-pen"></i> Edit</button>
-                <button onclick="deleteRecord(${record.id})" class="col-span-1 py-2 bg-red-500/10 text-red-400 text-[10px] font-bold rounded-lg border border-red-500/30 active:bg-red-500/20 transition-colors"><i class="fa-solid fa-trash-can"></i> Del</button>
-                <button onclick="downloadReceipt(${record.id})" class="col-span-1 py-2 bg-slate-700 text-white text-[10px] font-bold rounded-lg active:bg-slate-600 transition-colors shadow-sm"><i class="fa-regular fa-image"></i> IMG</button>
-                <button onclick="downloadPDF(${record.id})" class="col-span-1 py-2 bg-sky-500 text-white text-[10px] font-bold rounded-lg active:bg-sky-600 transition-colors shadow-sm"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+            <!-- Hidden Details Section with Animation -->
+            <div id="details-${record.id}" class="transition-all duration-300 ease-in-out overflow-hidden" style="max-height: 0px; opacity: 0; margin-top: 0px;">
+              <div class="pt-3 border-t border-[#334155]">
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="${mBadge} px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide">${record.method}</span>
+                  <span class="text-xs font-mono font-bold text-slate-300">${record.number}</span>
+                </div>
+                ${record.trxId ? `<div class="bg-[#0b1120] border border-[#334155] rounded-md px-2 py-1.5 text-[11px] font-mono text-slate-400 mb-2">TrxID: <span class="text-white font-semibold">${record.trxId}</span></div>` : ''}
+                
+                <div class="mb-4">${renderAction('1000x', record.total1000x, record.status1000x)}${renderAction('615x', record.total615x, record.status615x)}</div>
+                
+                <div class="grid grid-cols-4 gap-2 border-t border-[#334155] pt-3">
+                  <button onclick="editRecord(${record.id})" class="col-span-1 py-2 bg-[#0b1120] text-slate-300 text-[10px] font-bold rounded-lg border border-[#334155] active:bg-slate-700 transition-colors"><i class="fa-solid fa-pen"></i> Edit</button>
+                  <button onclick="deleteRecord(${record.id})" class="col-span-1 py-2 bg-red-500/10 text-red-400 text-[10px] font-bold rounded-lg border border-red-500/30 active:bg-red-500/20 transition-colors"><i class="fa-solid fa-trash-can"></i> Del</button>
+                  <button onclick="downloadReceipt(${record.id})" class="col-span-1 py-2 bg-slate-700 text-white text-[10px] font-bold rounded-lg active:bg-slate-600 transition-colors shadow-sm"><i class="fa-regular fa-image"></i> IMG</button>
+                  <button onclick="downloadPDF(${record.id})" class="col-span-1 py-2 bg-sky-500 text-white text-[10px] font-bold rounded-lg active:bg-sky-600 transition-colors shadow-sm"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                </div>
               </div>
             </div>
 
