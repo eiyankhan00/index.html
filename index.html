@@ -108,6 +108,7 @@
       max-height: 0 !important;
       margin-bottom: 0 !important;
       border-width: 0 !important;
+      overflow: hidden !important;
     }
 
     /* Dynamic Island Toast */
@@ -291,7 +292,6 @@
             <span id="recordCount" class="bg-sky-500/20 border border-sky-500/30 text-sky-400 text-[10px] font-bold px-2 py-0.5 rounded-full" title="Total Records">0</span>
           </div>
           <div class="flex items-center gap-2">
-            <!-- Search Toggle Button (Bouncy) -->
             <button onclick="toggleSearch()" id="searchToggleBtn" class="text-[12px] bg-[#1e293b] text-sky-400 border border-sky-500/30 w-8 h-8 rounded-full font-bold active:bg-[#334155] flex items-center justify-center shadow-sm ios-bounce">
               <i class="fa-solid fa-magnifying-glass"></i>
             </button>
@@ -308,7 +308,7 @@
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                 <i class="fa-solid fa-user text-xs"></i>
               </div>
-              <input type="text" id="searchName" placeholder="Search by name or ID..." class="w-full pl-8 pr-3 py-2 bg-[#0b1120] border border-[#334155] text-white placeholder-slate-500 rounded-lg focus:border-sky-500 outline-none text-sm">
+              <input type="text" id="searchName" placeholder="Search by name..." class="w-full pl-8 pr-3 py-2 bg-[#0b1120] border border-[#334155] text-white placeholder-slate-500 rounded-lg focus:border-sky-500 outline-none text-sm">
             </div>
             
             <div class="flex gap-2">
@@ -398,23 +398,68 @@
       return `${status}::${playerId || ''}::${itemTrxId || ''}`;
     };
 
-    function toggleReceiptTheme() {
+    // ==========================================
+    // DYNAMIC ISLAND TOAST NOTIFICATION 
+    // ==========================================
+    window.showToast = (message, type = 'save') => {
+      const container = document.getElementById('toast-container');
+      
+      const wrapper = document.createElement('div');
+      wrapper.className = 'toast-wrapper';
+
+      let bg, icon;
+      const textColor = 'text-white';
+      
+      if (type === 'delete') {
+        bg = 'bg-red-500 border-red-400 shadow-[0_8px_16px_rgba(239,68,68,0.4)]';
+        icon = 'fa-trash-can';
+      } else if (type === 'reject' || type === 'error') {
+        bg = 'bg-red-500 border-red-400 shadow-[0_8px_16px_rgba(239,68,68,0.4)]';
+        icon = type === 'error' ? 'fa-circle-exclamation' : 'fa-ban';
+      } else if (type === 'save' || type === 'info') {
+        bg = 'bg-sky-500 border-sky-400 shadow-[0_8px_16px_rgba(14,165,233,0.4)]';
+        icon = type === 'info' ? 'fa-info-circle' : 'fa-check-circle';
+      } else if (type === 'update' || type === 'paid') {
+        bg = 'bg-emerald-500 border-emerald-400 shadow-[0_8px_16px_rgba(16,185,129,0.4)]';
+        icon = 'fa-check-circle';
+      } else {
+        bg = 'bg-slate-700 border-slate-600 shadow-sm';
+        icon = 'fa-check';
+      }
+
+      const toastContent = document.createElement('div');
+      toastContent.className = `${bg} px-5 py-3 rounded-full flex items-center justify-center gap-2 font-bold text-sm pointer-events-auto border mx-auto w-max z-50 relative`;
+      toastContent.innerHTML = `<i class="fa-solid ${icon} ${textColor}"></i> <span class="${textColor}">${message}</span>`;
+      
+      wrapper.appendChild(toastContent);
+      container.appendChild(wrapper);
+      
+      void wrapper.offsetWidth; 
+      wrapper.classList.add('toast-show');
+      
+      setTimeout(() => { 
+        wrapper.classList.remove('toast-show');
+        setTimeout(() => wrapper.remove(), 500); 
+      }, 3000);
+    };
+
+    let receiptTheme = 'dark'; 
+    window.toggleReceiptTheme = () => {
       const btn = document.getElementById('themeToggleBtn');
       if(receiptTheme === 'dark') {
         receiptTheme = 'light';
         btn.innerHTML = `<i class="fa-solid fa-sun"></i> Light Receipt`;
         btn.className = "text-[10px] bg-slate-200 text-slate-700 border border-slate-300 px-3 py-1.5 rounded-full font-bold active:bg-slate-300 flex items-center gap-1.5 shadow-sm whitespace-nowrap ios-bounce";
-        showToast("Light Theme Selected", "info");
+        window.showToast("Light Theme Selected", "info");
       } else {
         receiptTheme = 'dark';
         btn.innerHTML = `<i class="fa-solid fa-moon"></i> Dark Receipt`;
         btn.className = "text-[10px] bg-[#1e293b] text-sky-400 border border-sky-500/30 px-3 py-1.5 rounded-full font-bold active:bg-[#334155] flex items-center gap-1.5 whitespace-nowrap ios-bounce";
-        showToast("Dark Theme Selected", "info");
+        window.showToast("Dark Theme Selected", "info");
       }
-    }
-    window.toggleReceiptTheme = toggleReceiptTheme;
+    };
 
-    function toggleSearch() {
+    window.toggleSearch = () => {
       const container = document.getElementById('searchContainer');
       const btnIcon = document.querySelector('#searchToggleBtn i');
       
@@ -431,8 +476,7 @@
         container.style.transform = 'translateY(-10px) scale(0.95)';
         btnIcon.className = 'fa-solid fa-magnifying-glass'; 
       }
-    }
-    window.toggleSearch = toggleSearch;
+    };
 
     const getNextId = () => {
       if (recordsData.length === 0) return 1;
@@ -533,7 +577,7 @@
       document.getElementById('dateInput').value = `${yyyy}-${mm}-${dd}`;
     };
 
-    const switchTab = (tabName) => {
+    window.switchTab = (tabName) => {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
       document.getElementById(`tab-${tabName}`).classList.add('active');
@@ -544,51 +588,6 @@
         renderedRecordIds.clear(); 
         renderRecords();
       }
-    };
-
-    // ==========================================
-    // DYNAMIC ISLAND TOAST NOTIFICATION 
-    // ==========================================
-    const showToast = (message, type = 'save') => {
-      const container = document.getElementById('toast-container');
-      
-      const wrapper = document.createElement('div');
-      wrapper.className = 'toast-wrapper';
-
-      let bg, icon;
-      const textColor = 'text-white';
-      
-      if (type === 'delete') {
-        bg = 'bg-red-500 border-red-400 shadow-[0_8px_16px_rgba(239,68,68,0.4)]';
-        icon = 'fa-trash-can';
-      } else if (type === 'reject' || type === 'error') {
-        bg = 'bg-red-500 border-red-400 shadow-[0_8px_16px_rgba(239,68,68,0.4)]';
-        icon = type === 'error' ? 'fa-circle-exclamation' : 'fa-ban';
-      } else if (type === 'save' || type === 'info') {
-        bg = 'bg-sky-500 border-sky-400 shadow-[0_8px_16px_rgba(14,165,233,0.4)]';
-        icon = type === 'info' ? 'fa-info-circle' : 'fa-check-circle';
-      } else if (type === 'update' || type === 'paid') {
-        bg = 'bg-emerald-500 border-emerald-400 shadow-[0_8px_16px_rgba(16,185,129,0.4)]';
-        icon = 'fa-check-circle';
-      } else {
-        bg = 'bg-slate-700 border-slate-600 shadow-sm';
-        icon = 'fa-check';
-      }
-
-      const toastContent = document.createElement('div');
-      toastContent.className = `${bg} px-5 py-3 rounded-full flex items-center justify-center gap-2 font-bold text-sm pointer-events-auto border mx-auto w-max z-50 relative`;
-      toastContent.innerHTML = `<i class="fa-solid ${icon} ${textColor}"></i> <span class="${textColor}">${message}</span>`;
-      
-      wrapper.appendChild(toastContent);
-      container.appendChild(wrapper);
-      
-      void wrapper.offsetWidth; 
-      wrapper.classList.add('toast-show');
-      
-      setTimeout(() => { 
-        wrapper.classList.remove('toast-show');
-        setTimeout(() => wrapper.remove(), 500); 
-      }, 3000);
     };
 
     let confirmCallback = null;
@@ -606,7 +605,7 @@
       }, 10);
     };
 
-    const closeConfirmModal = () => {
+    window.closeConfirmModal = () => {
       const modal = document.getElementById('confirm-modal');
       modal.classList.add('opacity-0');
       modal.querySelector('div').classList.add('scale-95');
@@ -615,15 +614,15 @@
 
     document.getElementById('confirm-cancel').addEventListener('click', () => {
       if(cancelCallback) cancelCallback();
-      closeConfirmModal();
+      window.closeConfirmModal();
     });
 
     document.getElementById('confirm-ok').addEventListener('click', () => {
       if(confirmCallback) confirmCallback();
-      closeConfirmModal();
+      window.closeConfirmModal();
     });
 
-    function toggleDetails(id) {
+    window.toggleDetails = (id) => {
       const numId = Number(id);
       const detailsDiv = document.getElementById(`details-${id}`);
       const icon = document.getElementById(`icon-${id}`);
@@ -641,17 +640,15 @@
         detailsDiv.style.opacity = '1';
         icon.style.transform = 'rotate(180deg)';
       }
-    }
-    window.toggleDetails = toggleDetails;
+    };
 
-    function clearFilters() {
+    window.clearFilters = () => {
       document.getElementById('searchName').value = '';
       document.getElementById('searchNumber').value = '';
       document.getElementById('searchDate').value = '';
       renderedRecordIds.clear(); 
       renderRecords();
-    }
-    window.clearFilters = clearFilters;
+    };
 
     let lastScrollTop = 0;
     const mainScroll = document.getElementById('main-scroll');
@@ -673,7 +670,7 @@
     }, { passive: true });
 
     // ==========================================
-    // SWIPE TO DISMISS / DELETE LOGIC (Android 16 Hold-to-Delete)
+    // SWIPE TO DISMISS / DELETE LOGIC (Android 16 Perfected)
     // ==========================================
     let swipeEventsAttached = false;
     function initSwipeToDismiss() {
@@ -746,17 +743,14 @@
                     if (prevInner) prevInner.style.transform = `translateX(${nudge}px)`;
                     if (nextInner) nextInner.style.transform = `translateX(${nudge}px)`;
 
-                    // NEW: If pulled past -80px and held, trigger delete
                     if (currentX < -80 && !holdTimer && !deleteTriggered) {
                         holdTimer = setTimeout(() => {
                             deleteTriggered = true;
                             
-                            // Snap open smoothly
                             const springTransition = 'transform 0.4s cubic-bezier(0.34, 1.15, 0.64, 1)';
                             activeCardInner.style.transition = springTransition;
                             activeCardInner.style.transform = `translateX(-100px)`;
 
-                            // Reset siblings
                             if (prevInner) {
                                 prevInner.style.transition = springTransition;
                                 prevInner.style.transform = 'translateX(0px)';
@@ -772,9 +766,8 @@
                             if (typeof window.deleteRecord === 'function') {
                                 window.deleteRecord(id, swipedElement);
                             }
-                        }, 400); // 0.4 seconds hold to trigger
+                        }, 400); 
                     } else if (currentX >= -80 && holdTimer) {
-                        // If moved back before timer ends, cancel the hold timer
                         clearTimeout(holdTimer);
                         holdTimer = null;
                     }
@@ -790,7 +783,6 @@
                 holdTimer = null;
             }
             
-            // If user just swiped and released quickly (didn't hold), always snap back
             if (!deleteTriggered) {
                 const springTransition = 'transform 0.6s cubic-bezier(0.34, 1.3, 0.64, 1)';
                 activeCardInner.style.transition = springTransition;
@@ -826,27 +818,30 @@
       
       let totalPaid = 0;
 
+      // ==========================================
+      // STRICT SEARCH FILTER (Name, Number, Date ONLY)
+      // ==========================================
       const filtered = recordsData.filter(r => {
-        let matchName = true;
-        let matchNum = true;
-        let matchDate = true;
+        let isMatch = true;
 
         if (nameTerm) {
           const uName = String(r.userName || '').toLowerCase();
-          const p1000 = parseStatus(r.status1000x).playerId.toLowerCase();
-          const p615 = parseStatus(r.status615x).playerId.toLowerCase();
-          matchName = uName.includes(nameTerm) || p1000.includes(nameTerm) || p615.includes(nameTerm);
+          if (!uName.includes(nameTerm)) {
+             isMatch = false;
+          }
         }
         if (numTerm) {
           const uNum = String(r.number || '');
-          matchNum = uNum.includes(numTerm);
+          if (!uNum.includes(numTerm)) {
+             isMatch = false;
+          }
         }
         if (dateTerm) {
-          matchDate = (r.date === dateTerm);
+          if (r.date !== dateTerm) {
+             isMatch = false;
+          }
         }
 
-        const isMatch = matchName && matchNum && matchDate;
-        
         if (isMatch) {
           const stat1000x = parseStatus(r.status1000x).status;
           const stat615x = parseStatus(r.status615x).status;
@@ -903,8 +898,8 @@
           let actionBtns = parsed.status === 'Pending' ? `
             ${inlineTrxInput}
             <div class="flex gap-2 mt-2 w-full">
-              <button onclick="updateStatus(${record.id}, '${type}', 'Paid')" class="flex-1 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded text-xs font-bold active:bg-emerald-500/20 ios-bounce">Mark Paid</button>
-              <button onclick="updateStatus(${record.id}, '${type}', 'Rejected')" class="flex-1 py-1.5 bg-red-500/10 text-red-400 border border-red-500/30 rounded text-xs font-bold active:bg-red-500/20 ios-bounce">Reject</button>
+              <button onclick="window.updateStatus(${record.id}, '${type}', 'Paid')" class="flex-1 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded text-xs font-bold active:bg-emerald-500/20 ios-bounce">Mark Paid</button>
+              <button onclick="window.updateStatus(${record.id}, '${type}', 'Rejected')" class="flex-1 py-1.5 bg-red-500/10 text-red-400 border border-red-500/30 rounded text-xs font-bold active:bg-red-500/20 ios-bounce">Reject</button>
             </div>` : '';
             
           let qtyDisp = record['qty'+type] || '?';
@@ -948,7 +943,7 @@
             <div class="record-card-inner relative w-full h-full bg-[#1e293b] rounded-2xl shadow-sm border border-[#334155] p-4 z-10 transition-transform duration-300 overflow-hidden" data-id="${record.id}">
               <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-sky-500"></div>
               
-              <div class="flex justify-between items-start cursor-pointer select-none ios-bounce" onclick="toggleDetails(${record.id})">
+              <div class="flex justify-between items-start cursor-pointer select-none ios-bounce" onclick="window.toggleDetails(${record.id})">
                 <div>
                   <h3 class="text-base font-bold text-white leading-tight flex items-center flex-wrap">
                     ${record.userName}
@@ -979,10 +974,10 @@
                   </div>
                   
                   <div class="grid grid-cols-4 gap-2 border-t border-[#334155] pt-3">
-                    <button onclick="editRecord(${record.id})" class="col-span-1 py-2 bg-[#0b1120] text-slate-300 text-[10px] font-bold rounded-lg border border-[#334155] active:bg-slate-700 ios-bounce"><i class="fa-solid fa-pen"></i> Edit</button>
-                    <button onclick="deleteRecord(${record.id})" class="col-span-1 py-2 bg-red-500/10 text-red-400 text-[10px] font-bold rounded-lg border border-red-500/30 active:bg-red-500/20 ios-bounce"><i class="fa-solid fa-trash-can"></i> Del</button>
-                    <button onclick="downloadReceipt(${record.id})" class="col-span-1 py-2 bg-slate-700 text-white text-[10px] font-bold rounded-lg active:bg-slate-600 shadow-sm ios-bounce"><i class="fa-regular fa-image"></i> IMG</button>
-                    <button onclick="downloadPDF(${record.id})" class="col-span-1 py-2 bg-sky-500 text-white text-[10px] font-bold rounded-lg active:bg-sky-600 shadow-sm ios-bounce"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                    <button onclick="window.editRecord(${record.id})" class="col-span-1 py-2 bg-[#0b1120] text-slate-300 text-[10px] font-bold rounded-lg border border-[#334155] active:bg-slate-700 ios-bounce"><i class="fa-solid fa-pen"></i> Edit</button>
+                    <button onclick="window.deleteRecord(${record.id})" class="col-span-1 py-2 bg-red-500/10 text-red-400 text-[10px] font-bold rounded-lg border border-red-500/30 active:bg-red-500/20 ios-bounce"><i class="fa-solid fa-trash-can"></i> Del</button>
+                    <button onclick="window.downloadReceipt(${record.id})" class="col-span-1 py-2 bg-slate-700 text-white text-[10px] font-bold rounded-lg active:bg-slate-600 shadow-sm ios-bounce"><i class="fa-regular fa-image"></i> IMG</button>
+                    <button onclick="window.downloadPDF(${record.id})" class="col-span-1 py-2 bg-sky-500 text-white text-[10px] font-bold rounded-lg active:bg-sky-600 shadow-sm ios-bounce"><i class="fa-solid fa-file-pdf"></i> PDF</button>
                   </div>
                 </div>
               </div>
@@ -1064,10 +1059,10 @@
       const isActive2 = q2 > 0 || r2 > 0 || pid2 !== '';
 
       if (!isActive1 && !isActive2) {
-        return showToast("Please enter amount, rate, or at least one ID", "error");
+        return window.showToast("Please enter amount, rate, or at least one ID", "error");
       }
 
-      showToast("Saving data...", "info");
+      window.showToast("Saving data...", "info");
 
       const btn = document.getElementById('submitBtn');
       btn.innerHTML = '<div class="loader"></div> <span class="ml-2">Saving...</span>';
@@ -1119,13 +1114,13 @@
           recordsData[index] = recordToSave;
         }
         sendActionToSheet('updateRecord', recordToSave).then(() => {
-          showToast("Record Updated!", "update");
+          window.showToast("Record Updated!", "update");
           resetForm();
         });
       } else {
         recordsData.unshift(recordToSave);
         sendActionToSheet('addRecord', recordToSave).then(() => {
-          showToast("New Record Saved!", "save");
+          window.showToast("New Record Saved!", "save");
           resetForm();
         });
       }
@@ -1142,10 +1137,10 @@
       btn.disabled = false;
       
       renderedRecordIds.clear();
-      switchTab('history');
+      window.switchTab('history');
     };
 
-    function editRecord(id) {
+    window.editRecord = (id) => {
       const r = recordsData.find(r => r.id === id);
       if (!r) return;
       editingId = id;
@@ -1167,15 +1162,14 @@
       playerId615x.value = p615.playerId;
       
       calculateTotals();
-      switchTab('new');
+      window.switchTab('new');
       
       const btn = document.getElementById('submitBtn');
       btn.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Update Record`;
       btn.className = "w-full py-4 bg-emerald-500 active:bg-emerald-600 text-white font-bold rounded-b-2xl shadow-[0_4px_14px_rgba(16,185,129,0.3)] flex justify-center items-center gap-2 text-lg save-bounce";
-    }
-    window.editRecord = editRecord;
+    };
 
-    function deleteRecord(id, swipedCardElement = null) {
+    window.deleteRecord = (id, swipedCardElement = null) => {
       const innerCard = swipedCardElement || document.querySelector(`.record-card-inner[data-id="${id}"]`);
 
       showConfirmModal(
@@ -1191,14 +1185,14 @@
               recordsData = recordsData.filter(r => r.id !== id);
               renderRecords(); 
               sendActionToSheet('deleteRecord', { id: id }).then(() => {
-                showToast("Record Deleted!", "delete");
+                window.showToast("Record Deleted!", "delete");
               });
             }, 400);
           } else {
             recordsData = recordsData.filter(r => r.id !== id);
             renderRecords(); 
             sendActionToSheet('deleteRecord', { id: id }).then(() => {
-              showToast("Record Deleted!", "delete");
+              window.showToast("Record Deleted!", "delete");
             });
           }
         },
@@ -1208,10 +1202,9 @@
           }
         }
       );
-    }
-    window.deleteRecord = deleteRecord;
+    };
 
-    function updateStatus(id, type, status) {
+    window.updateStatus = (id, type, status) => {
       const cardInner = document.querySelector(`.record-card-inner[data-id="${id}"]`);
       if (cardInner) {
         cardInner.style.transition = 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -1245,11 +1238,14 @@
           saveLocalData(); 
           sendActionToSheet('updateRecord', recordsData[idx]);
           
-          showToast(status === 'Paid' ? "Payment Marked as Paid!" : "Payment Rejected!", status === 'Paid' ? "paid" : "reject");
+          window.showToast(status === 'Paid' ? "Payment Marked as Paid!" : "Payment Rejected!", status === 'Paid' ? "paid" : "reject");
         }
       }, 150);
-    }
-    window.updateStatus = updateStatus;
+    };
+
+    document.getElementById('searchName').addEventListener('input', () => { renderedRecordIds.clear(); renderRecords(); });
+    document.getElementById('searchNumber').addEventListener('input', () => { renderedRecordIds.clear(); renderRecords(); });
+    document.getElementById('searchDate').addEventListener('change', () => { renderedRecordIds.clear(); renderRecords(); });
 
     // ==========================================
     // MODERN HTML GENERATOR FOR RECEIPTS 
@@ -1381,10 +1377,10 @@
       `;
     };
 
-    function downloadReceipt(id) {
+    window.downloadReceipt = async (id) => {
       const record = recordsData.find(r => r.id === id);
       if(!record) return;
-      showToast("Generating Image...", "info");
+      window.showToast("Generating Image...", "info");
 
       let hasPending = false;
       let hasPaid = false;
@@ -1418,11 +1414,16 @@
       }
 
       const wrapper = document.createElement('div');
-      wrapper.style.position = 'absolute';
-      wrapper.style.top = '-9999px';
-      wrapper.style.left = '-9999px';
+      wrapper.style.position = 'fixed';
+      wrapper.style.top = '0';
+      wrapper.style.left = '0';
+      wrapper.style.opacity = '0';
+      wrapper.style.zIndex = '-9999';
+      wrapper.style.pointerEvents = 'none';
       wrapper.innerHTML = generateReceiptHTML(record, isFullyPaid, isRejected);
       document.body.appendChild(wrapper);
+
+      void wrapper.offsetWidth; 
 
       try {
         const bgVal = receiptTheme === 'dark' ? '#0f172a' : '#ffffff';
@@ -1431,22 +1432,21 @@
             link.download = `Receipt_${record.userName.replace(/\s+/g, '_')}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
-            document.body.removeChild(wrapper);
+            if (wrapper.parentNode) document.body.removeChild(wrapper);
         }).catch(err => {
-            showToast("Error generating image", "error");
-            document.body.removeChild(wrapper);
+            window.showToast("Error generating image", "error");
+            if (wrapper.parentNode) document.body.removeChild(wrapper);
         });
       } catch(err) { 
-        showToast("Error generating image", "error");
-        document.body.removeChild(wrapper);
+        window.showToast("Error generating image", "error");
+        if (wrapper.parentNode) document.body.removeChild(wrapper);
       }
-    }
-    window.downloadReceipt = downloadReceipt;
+    };
 
-    function downloadPDF(id) {
+    window.downloadPDF = async (id) => {
       const record = recordsData.find(r => r.id === id);
       if(!record) return;
-      showToast("Generating PDF...", "info");
+      window.showToast("Generating PDF...", "info");
 
       let hasPending = false;
       let hasPaid = false;
@@ -1480,35 +1480,39 @@
       }
 
       const wrapper = document.createElement('div');
-      wrapper.style.position = 'absolute';
-      wrapper.style.top = '-9999px';
-      wrapper.style.left = '-9999px';
+      wrapper.style.position = 'fixed';
+      wrapper.style.top = '0';
+      wrapper.style.left = '0';
+      wrapper.style.opacity = '0';
+      wrapper.style.zIndex = '-9999';
+      wrapper.style.pointerEvents = 'none';
       wrapper.innerHTML = generateReceiptHTML(record, isFullyPaid, isRejected);
       document.body.appendChild(wrapper);
+
+      void wrapper.offsetWidth; 
 
       const element = wrapper.querySelector('#receiptContent');
       const opt = {
         margin:       0.2,
         filename:     `Receipt_${record.userName.replace(/\s+/g, '_')}.pdf`,
         image:        { type: 'jpeg', quality: 1 },
-        html2canvas:  { scale: 2, useCORS: true },
+        html2canvas:  { scale: 2, useCORS: true, logging: false, backgroundColor: receiptTheme === 'dark' ? '#0f172a' : '#ffffff' },
         jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
       };
 
       try {
         html2pdf().set(opt).from(element).save().then(() => {
-            document.body.removeChild(wrapper);
-            showToast("PDF Downloaded", "save");
+            if (wrapper.parentNode) document.body.removeChild(wrapper);
+            window.showToast("PDF Downloaded", "save");
         }).catch(err => {
-            document.body.removeChild(wrapper);
-            showToast("Error generating PDF", "error");
+            if (wrapper.parentNode) document.body.removeChild(wrapper);
+            window.showToast("Error generating PDF", "error");
         });
       } catch(err) {
-        document.body.removeChild(wrapper);
-        showToast("Error generating PDF", "error");
+        if (wrapper.parentNode) document.body.removeChild(wrapper);
+        window.showToast("Error generating PDF", "error");
       }
-    }
-    window.downloadPDF = downloadPDF;
+    };
 
     setTodayDate();
     syncDataFromSheet(); 
