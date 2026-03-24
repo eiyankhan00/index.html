@@ -28,7 +28,6 @@
       --text-muted: #94a3b8;
     }
 
-    /* Mobile scroll fix logic */
     html, body {
       height: 100%;
       height: 100dvh; 
@@ -81,6 +80,31 @@
       width: 20px; height: 20px; animation: spin 1s linear infinite;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* CSS transition for details animation */
+    .details-panel {
+      transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out, margin-top 0.4s ease-in-out;
+    }
+
+    /* CSS transition for Dynamic Island Toast with smooth slide up */
+    .toast-wrapper {
+      transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      max-height: 0;
+      opacity: 0;
+      transform: translateY(-20px) scale(0.8);
+      margin-top: 0;
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      overflow: hidden; 
+    }
+    .toast-wrapper.toast-show {
+      max-height: 100px; 
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      margin-top: 12px;
+      overflow: visible; 
+    }
   </style>
 </head>
 <body class="antialiased flex flex-col h-[100dvh] overflow-hidden">
@@ -97,16 +121,19 @@
       </div>
       <p class="text-sky-400 text-xs font-medium" id="syncStatus"><i class="fa-solid fa-arrows-rotate fa-spin"></i> Initializing...</p>
     </div>
-    <div class="bg-[#0b1120] border border-[#334155] h-10 w-10 rounded-full flex items-center justify-center">
-      <i class="fa-solid fa-user-tie text-slate-400 text-lg"></i>
+    
+    <!-- Total Paid Amount Header Widget -->
+    <div class="bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl flex flex-col items-end justify-center shadow-sm">
+      <span class="text-[9px] font-bold text-emerald-500/70 uppercase tracking-wider leading-none mb-1">Total Paid</span>
+      <span id="headerTotalPaid" class="text-base font-black text-emerald-400 leading-none">৳0</span>
     </div>
   </header>
 
   <!-- Main Scrollable Content -->
-  <main class="flex-1 min-h-0 overflow-y-auto pb-32 px-4 pt-5" id="main-scroll">
+  <main class="flex-1 min-h-0 overflow-y-auto pb-32" id="main-scroll">
     
     <!-- ==================== TAB 1: NEW ENTRY ==================== -->
-    <div id="tab-new" class="tab-content active space-y-5 max-w-md mx-auto">
+    <div id="tab-new" class="tab-content active space-y-5 max-w-md mx-auto px-4 pt-5">
       <form id="paymentForm" class="space-y-5">
         
         <div class="bg-[#1e293b] p-5 rounded-2xl shadow-sm border border-[#334155] space-y-4">
@@ -137,17 +164,18 @@
             </div>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1.5 ml-1">Transaction ID <span class="font-normal opacity-70">(Optional)</span></label>
+            <label class="block text-xs font-semibold text-slate-400 mb-1.5 ml-1">Main Transaction ID <span class="font-normal opacity-70">(Optional)</span></label>
             <input type="text" id="trxId" placeholder="Paste TrxID" class="input-field font-mono text-sm uppercase">
           </div>
         </div>
 
+        <!-- 1000x Box -->
         <div class="bg-[#1e293b] p-5 rounded-2xl border border-[#334155]">
           <div class="flex justify-between items-center mb-3">
             <h3 class="font-bold text-sky-400 text-sm"><i class="fa-solid fa-gamepad mr-1"></i> 1000x ID</h3>
             <span class="text-xs font-bold bg-sky-500/20 text-sky-400 border border-sky-500/30 px-2 py-1 rounded-md" id="sub1000x">৳ 0</span>
           </div>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-2 gap-3 mb-3">
             <div>
               <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 text-center">Quantity</label>
               <input type="number" id="qty1000x" placeholder="0" min="0" class="input-field calc-input">
@@ -157,14 +185,19 @@
               <input type="number" id="rate1000x" placeholder="0.00" min="0" step="0.01" class="input-field calc-input">
             </div>
           </div>
+          <!-- Player ID Input for 1000x -->
+          <div>
+            <input type="text" id="playerId1000x" placeholder="Player ID / Due ID (Optional)" class="input-field text-sm py-2.5 border-dashed border-[#475569] focus:border-solid focus:border-sky-500 text-sky-100 placeholder-slate-500">
+          </div>
         </div>
 
+        <!-- 615x Box -->
         <div class="bg-[#1e293b] p-5 rounded-2xl border border-[#334155]">
           <div class="flex justify-between items-center mb-3">
             <h3 class="font-bold text-sky-400 text-sm"><i class="fa-solid fa-gamepad mr-1"></i> 615x ID</h3>
             <span class="text-xs font-bold bg-sky-500/20 text-sky-400 border border-sky-500/30 px-2 py-1 rounded-md" id="sub615x">৳ 0</span>
           </div>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-2 gap-3 mb-3">
             <div>
               <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 text-center">Quantity</label>
               <input type="number" id="qty615x" placeholder="0" min="0" class="input-field calc-input">
@@ -173,6 +206,10 @@
               <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 text-center">Rate (৳)</label>
               <input type="number" id="rate615x" placeholder="0.00" min="0" step="0.01" class="input-field calc-input">
             </div>
+          </div>
+          <!-- Player ID Input for 615x -->
+          <div>
+            <input type="text" id="playerId615x" placeholder="Player ID / Due ID (Optional)" class="input-field text-sm py-2.5 border-dashed border-[#475569] focus:border-solid focus:border-sky-500 text-sky-100 placeholder-slate-500">
           </div>
         </div>
 
@@ -189,58 +226,69 @@
     </div>
 
     <!-- ==================== TAB 2: HISTORY ==================== -->
-    <div id="tab-history" class="tab-content space-y-4 max-w-md mx-auto">
+    <div id="tab-history" class="tab-content w-full max-w-md mx-auto">
       
-      <!-- Advanced Search / Filters -->
-      <div id="searchHeader" class="sticky top-0 bg-[#0f172a] pt-1 pb-3 z-10 transition-transform duration-300">
-        <div class="bg-[#1e293b] p-3 rounded-xl border border-[#334155] shadow-sm space-y-3">
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-              <i class="fa-solid fa-user text-xs"></i>
-            </div>
-            <input type="text" id="searchName" placeholder="Search by name..." class="w-full pl-8 pr-3 py-2 bg-[#0b1120] border border-[#334155] text-white placeholder-slate-500 rounded-lg focus:border-sky-500 outline-none text-sm">
+      <!-- Sticky Header with Search Icon and Receipt Theme Toggle -->
+      <div id="historyHeader" class="sticky top-0 bg-[#0f172a] pt-5 pb-2 px-4 z-30 transition-transform duration-300 w-full">
+        <div class="flex justify-between items-center mb-2">
+          <div class="flex items-center gap-2">
+            <h2 class="text-sm font-bold text-slate-300">History</h2>
+            <span id="recordCount" class="bg-sky-500/20 border border-sky-500/30 text-sky-400 text-[10px] font-bold px-2 py-0.5 rounded-full" title="Total Records">0</span>
           </div>
-          
-          <div class="flex gap-2">
-            <div class="relative flex-1">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <i class="fa-solid fa-phone text-xs"></i>
-              </div>
-              <input type="tel" id="searchNumber" placeholder="Number..." class="w-full pl-8 pr-3 py-2 bg-[#0b1120] border border-[#334155] text-white placeholder-slate-500 rounded-lg focus:border-sky-500 outline-none text-sm">
-            </div>
-            <div class="relative flex-1">
-              <input type="date" id="searchDate" class="w-full px-2 py-2 bg-[#0b1120] border border-[#334155] text-slate-300 rounded-lg focus:border-sky-500 outline-none text-[13px]">
-            </div>
-          </div>
-          
-          <div class="flex justify-end">
-            <button onclick="clearFilters()" class="text-[10px] bg-slate-700/50 text-slate-300 border border-slate-600 px-3 py-1.5 rounded-md font-bold active:bg-slate-600 transition-colors">
-              <i class="fa-solid fa-rotate-left mr-1"></i> Reset Filters
+          <div class="flex items-center gap-2">
+            <!-- Search Toggle Button -->
+            <button onclick="toggleSearch()" id="searchToggleBtn" class="text-[12px] bg-[#1e293b] text-sky-400 border border-sky-500/30 w-8 h-8 rounded-full font-bold active:bg-[#334155] transition-colors flex items-center justify-center shadow-sm">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+            <button onclick="toggleReceiptTheme()" id="themeToggleBtn" class="text-[10px] bg-[#1e293b] text-sky-400 border border-sky-500/30 px-3 py-1.5 rounded-full font-bold active:bg-[#334155] transition-colors flex items-center gap-1.5 whitespace-nowrap">
+              <i class="fa-solid fa-moon"></i> Dark Receipt
             </button>
           </div>
         </div>
-      </div>
 
-      <!-- Header with Receipt Theme Toggle -->
-      <div class="flex justify-between items-center px-1">
-        <div class="flex items-center gap-2">
-          <h2 class="text-sm font-bold text-slate-300">Saved Records</h2>
-          <span id="recordCount" class="bg-sky-500/20 border border-sky-500/30 text-sky-400 text-xs font-bold px-2 py-1 rounded-full">0</span>
+        <!-- Collapsible Advanced Search / Filters -->
+        <div id="searchContainer" class="transition-all duration-300 ease-in-out overflow-hidden" style="max-height: 0px; opacity: 0; margin-bottom: 0px;">
+          <div class="bg-[#1e293b] p-3 rounded-xl border border-[#334155] shadow-sm space-y-3">
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-solid fa-user text-xs"></i>
+              </div>
+              <input type="text" id="searchName" placeholder="Search by name or ID..." class="w-full pl-8 pr-3 py-2 bg-[#0b1120] border border-[#334155] text-white placeholder-slate-500 rounded-lg focus:border-sky-500 outline-none text-sm">
+            </div>
+            
+            <div class="flex gap-2">
+              <div class="relative flex-1">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <i class="fa-solid fa-phone text-xs"></i>
+                </div>
+                <input type="tel" id="searchNumber" placeholder="Number..." class="w-full pl-8 pr-3 py-2 bg-[#0b1120] border border-[#334155] text-white placeholder-slate-500 rounded-lg focus:border-sky-500 outline-none text-sm">
+              </div>
+              <div class="relative flex-1">
+                <input type="date" id="searchDate" class="w-full px-2 py-2 bg-[#0b1120] border border-[#334155] text-slate-300 rounded-lg focus:border-sky-500 outline-none text-[13px]">
+              </div>
+            </div>
+            
+            <div class="flex justify-end">
+              <button onclick="clearFilters()" class="text-[10px] bg-slate-700/50 text-slate-300 border border-slate-600 px-3 py-1.5 rounded-md font-bold active:bg-slate-600 transition-colors">
+                <i class="fa-solid fa-rotate-left mr-1"></i> Reset Filters
+              </button>
+            </div>
+          </div>
         </div>
-        <button onclick="toggleReceiptTheme()" id="themeToggleBtn" class="text-[10px] bg-[#1e293b] text-sky-400 border border-sky-500/30 px-3 py-1.5 rounded-full font-bold active:bg-[#334155] transition-colors flex items-center gap-1.5">
-          <i class="fa-solid fa-moon"></i> Dark Receipt
-        </button>
       </div>
 
-      <div id="emptyState" class="hidden bg-[#1e293b] p-10 text-center rounded-2xl border border-[#334155] shadow-sm mt-4">
-        <div class="w-16 h-16 bg-[#0b1120] rounded-full flex items-center justify-center mx-auto mb-3">
-          <i class="fa-solid fa-box-open text-2xl text-slate-600"></i>
+      <!-- Main History Records List -->
+      <div class="px-4 space-y-4 pt-2 pb-6">
+        <div id="emptyState" class="hidden bg-[#1e293b] p-10 text-center rounded-2xl border border-[#334155] shadow-sm mt-4">
+          <div class="w-16 h-16 bg-[#0b1120] rounded-full flex items-center justify-center mx-auto mb-3">
+            <i class="fa-solid fa-box-open text-2xl text-slate-600"></i>
+          </div>
+          <p class="font-medium text-slate-300 text-sm">No records found yet.</p>
+          <p class="text-xs text-slate-500 mt-1">Add a new entry to see it here.</p>
         </div>
-        <p class="font-medium text-slate-300 text-sm">No records found yet.</p>
-        <p class="text-xs text-slate-500 mt-1">Add a new entry to see it here.</p>
-      </div>
 
-      <div id="recordsContainer" class="space-y-4 pb-6"></div>
+        <div id="recordsContainer" class="space-y-4"></div>
+      </div>
     </div>
   </main>
 
@@ -258,46 +306,74 @@
 
   <div id="toast-container" class="fixed top-14 left-0 right-0 z-50 flex flex-col items-center gap-2 pointer-events-none px-4"></div>
 
+  <!-- Delete Confirmation Modal -->
   <div id="confirm-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
     <div class="bg-[#1e293b] border border-[#334155] rounded-2xl shadow-xl w-full max-w-xs p-6 transform scale-95 transition-transform duration-300 text-center">
-      <div class="w-16 h-16 bg-red-500/20 border border-red-500/30 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 text-3xl">
+      <div class="w-16 h-16 bg-red-500/10 border border-red-500/30 rounded-full flex items-center justify-center mx-auto mb-4 text-red-400 text-3xl">
         <i class="fa-solid fa-trash-can"></i>
       </div>
-      <h3 class="text-lg font-bold text-white mb-1">মুছে ফেলতে চান?</h3>
-      <p class="text-slate-400 mb-6 text-sm">আপনি কি নিশ্চিত যে এই রেকর্ডটি ডিলিট করতে চান? এটি আর ফেরত পাওয়া যাবে না।</p>
+      <h3 class="text-lg font-bold text-white mb-1">Delete Record?</h3>
+      <p class="text-slate-400 mb-6 text-sm">Are you sure you want to delete this record? It cannot be restored.</p>
       <div class="flex gap-3">
-        <button id="confirm-cancel" class="flex-1 py-3 text-slate-300 bg-[#334155] font-bold rounded-xl active:bg-slate-600 transition-colors text-sm">না</button>
-        <button id="confirm-ok" class="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl active:bg-red-600 transition-colors text-sm shadow-[0_4px_14px_rgba(239,68,68,0.3)]">হ্যাঁ, মুছুন</button>
+        <button id="confirm-cancel" class="flex-1 py-3 text-slate-300 bg-[#334155] font-bold rounded-xl active:bg-slate-600 transition-colors text-sm">No</button>
+        <button id="confirm-ok" class="flex-1 py-3 bg-red-500/10 text-red-400 border border-red-500/30 font-bold rounded-xl active:bg-red-500/20 transition-colors text-sm">Yes, Delete</button>
       </div>
     </div>
   </div>
 
   <script>
-    const apiKey = ""; // Added to prevent environment injection syntax error
+    const apiKey = ""; 
 
     // ==========================================
-    // GOOGLE SHEETS URL
+    // GOOGLE SHEETS URL & STATE
     // ==========================================
     const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwLo4sl_VxRbxkvp3wXbN0k0jh2NhOJSR6-YxXXXCdtiG3kYgOasAEKEAcZxzpQBuRg_g/exec"; 
     
     const STORAGE_KEY = 'paymentTrackerMobile_Data';
     let recordsData = [];
     let editingId = null;
+    let expandedRecordIds = new Set(); 
 
-    // --- Theme Toggle Logic ---
-    let receiptTheme = 'dark'; // Default to dark theme
+    const parseStatus = (str) => {
+      const s = String(str || '');
+      const parts = s.split('::');
+      return { status: parts[0] || 'N/A', playerId: parts[1] || '', itemTrxId: parts[2] || '' };
+    };
+
+    const buildStatus = (status, playerId, itemTrxId) => {
+      return `${status}::${playerId || ''}::${itemTrxId || ''}`;
+    };
+
+    let receiptTheme = 'dark'; 
     window.toggleReceiptTheme = () => {
       const btn = document.getElementById('themeToggleBtn');
       if(receiptTheme === 'dark') {
         receiptTheme = 'light';
-        btn.innerHTML = '<i class="fa-solid fa-sun"></i> Light Receipt';
-        btn.className = "text-[10px] bg-slate-200 text-slate-700 border border-slate-300 px-3 py-1.5 rounded-full font-bold active:bg-slate-300 transition-colors flex items-center gap-1.5 shadow-sm";
-        showToast("Light Theme Selected", "success");
+        btn.innerHTML = `<i class="fa-solid fa-sun"></i> Light Receipt`;
+        btn.className = "text-[10px] bg-slate-200 text-slate-700 border border-slate-300 px-3 py-1.5 rounded-full font-bold active:bg-slate-300 transition-colors flex items-center gap-1.5 shadow-sm whitespace-nowrap";
+        showToast("Light Theme Selected", "info");
       } else {
         receiptTheme = 'dark';
-        btn.innerHTML = '<i class="fa-solid fa-moon"></i> Dark Receipt';
-        btn.className = "text-[10px] bg-[#1e293b] text-sky-400 border border-sky-500/30 px-3 py-1.5 rounded-full font-bold active:bg-[#334155] transition-colors flex items-center gap-1.5";
-        showToast("Dark Theme Selected", "success");
+        btn.innerHTML = `<i class="fa-solid fa-moon"></i> Dark Receipt`;
+        btn.className = "text-[10px] bg-[#1e293b] text-sky-400 border border-sky-500/30 px-3 py-1.5 rounded-full font-bold active:bg-[#334155] transition-colors flex items-center gap-1.5 whitespace-nowrap";
+        showToast("Dark Theme Selected", "info");
+      }
+    };
+
+    window.toggleSearch = () => {
+      const container = document.getElementById('searchContainer');
+      const btnIcon = document.querySelector('#searchToggleBtn i');
+      
+      if (container.style.maxHeight === '0px' || !container.style.maxHeight) {
+        container.style.maxHeight = '250px'; 
+        container.style.opacity = '1';
+        container.style.marginBottom = '12px';
+        btnIcon.className = 'fa-solid fa-times'; 
+      } else {
+        container.style.maxHeight = '0px';
+        container.style.opacity = '0';
+        container.style.marginBottom = '0px';
+        btnIcon.className = 'fa-solid fa-magnifying-glass'; 
       }
     };
 
@@ -316,12 +392,12 @@
           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
           <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
         `;
-        syncStatus.innerHTML = '<i class="fa-solid fa-link text-emerald-400"></i> Connected to Sheet';
+        syncStatus.innerHTML = '<i class="fa-solid fa-link text-emerald-400"></i> Connected';
       } else {
         connIndicator.innerHTML = `
           <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
         `;
-        syncStatus.innerHTML = '<i class="fa-solid fa-link-slash text-red-400"></i> Not Connected (Offline)';
+        syncStatus.innerHTML = '<i class="fa-solid fa-link-slash text-red-400"></i> Offline';
       }
     };
 
@@ -365,7 +441,6 @@
         return;
       }
       try {
-        document.getElementById('syncStatus').innerHTML = '<i class="fa-solid fa-arrows-rotate fa-spin text-sky-400"></i> Fetching data...';
         const response = await fetch(GOOGLE_SHEET_URL);
         const result = await response.json();
         
@@ -410,16 +485,48 @@
       if(tabName === 'history') renderRecords();
     };
 
-    const showToast = (message, type = 'success') => {
+    const showToast = (message, type = 'save') => {
       const container = document.getElementById('toast-container');
-      const toast = document.createElement('div');
-      const bg = type === 'error' ? 'bg-red-500 border border-red-400' : 'bg-[#1e293b] border border-[#334155] text-sky-400';
-      const icon = type === 'error' ? 'fa-circle-exclamation text-white' : 'fa-circle-check text-sky-400';
-      toast.className = `${bg} shadow-[0_4px_20px_rgba(0,0,0,0.5)] px-5 py-3 rounded-full transform transition-all duration-300 -translate-y-10 opacity-0 flex items-center gap-2 font-bold text-sm pointer-events-auto w-auto max-w-sm`;
-      toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span class="${type === 'error' ? 'text-white' : 'text-slate-200'}">${message}</span>`;
-      container.appendChild(toast);
-      setTimeout(() => { toast.classList.remove('-translate-y-10', 'opacity-0'); }, 10);
-      setTimeout(() => { toast.classList.add('-translate-y-10', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 3000);
+      
+      const wrapper = document.createElement('div');
+      wrapper.className = 'toast-wrapper';
+
+      let bg, icon;
+      const textColor = 'text-white';
+      
+      if (type === 'delete') {
+        bg = 'bg-red-500 border-red-400 shadow-[0_8px_16px_rgba(239,68,68,0.4)]';
+        icon = 'fa-trash-can';
+      } else if (type === 'reject' || type === 'error') {
+        bg = 'bg-red-500 border-red-400 shadow-[0_8px_16px_rgba(239,68,68,0.4)]';
+        icon = type === 'error' ? 'fa-circle-exclamation' : 'fa-ban';
+      } else if (type === 'save' || type === 'info') {
+        bg = 'bg-sky-500 border-sky-400 shadow-[0_8px_16px_rgba(14,165,233,0.4)]';
+        icon = type === 'info' ? 'fa-info-circle' : 'fa-check-circle';
+      } else if (type === 'update' || type === 'paid') {
+        bg = 'bg-emerald-500 border-emerald-400 shadow-[0_8px_16px_rgba(16,185,129,0.4)]';
+        icon = 'fa-check-circle';
+      } else {
+        bg = 'bg-slate-700 border-slate-600 shadow-sm';
+        icon = 'fa-check';
+      }
+
+      const toastContent = document.createElement('div');
+      toastContent.className = `${bg} px-5 py-3 rounded-full flex items-center justify-center gap-2 font-bold text-sm pointer-events-auto border mx-auto w-max z-50 relative`;
+      toastContent.innerHTML = `<i class="fa-solid ${icon} ${textColor}"></i> <span class="${textColor}">${message}</span>`;
+      
+      wrapper.appendChild(toastContent);
+      container.appendChild(wrapper);
+      
+      // Trigger entrance animation
+      void wrapper.offsetWidth; 
+      wrapper.classList.add('toast-show');
+      
+      // Exit animation
+      setTimeout(() => { 
+        wrapper.classList.remove('toast-show');
+        setTimeout(() => wrapper.remove(), 500); 
+      }, 3000);
     };
 
     let confirmCallback = null;
@@ -445,19 +552,22 @@
     });
 
     window.toggleDetails = (id) => {
+      const numId = Number(id);
       const detailsDiv = document.getElementById(`details-${id}`);
       const icon = document.getElementById(`icon-${id}`);
-      
-      if (detailsDiv.style.maxHeight === '0px' || !detailsDiv.style.maxHeight) {
-        detailsDiv.style.marginTop = '12px';
-        detailsDiv.style.maxHeight = detailsDiv.scrollHeight + 50 + 'px';
-        detailsDiv.style.opacity = '1';
-        icon.style.transform = 'rotate(180deg)';
-      } else {
+
+      if (expandedRecordIds.has(numId)) {
+        expandedRecordIds.delete(numId);
         detailsDiv.style.maxHeight = '0px';
         detailsDiv.style.opacity = '0';
         detailsDiv.style.marginTop = '0px';
         icon.style.transform = 'rotate(0deg)';
+      } else {
+        expandedRecordIds.add(numId);
+        detailsDiv.style.marginTop = '12px';
+        detailsDiv.style.maxHeight = detailsDiv.scrollHeight + 300 + 'px'; 
+        detailsDiv.style.opacity = '1';
+        icon.style.transform = 'rotate(180deg)';
       }
     };
 
@@ -472,16 +582,16 @@
     const mainScroll = document.getElementById('main-scroll');
     
     mainScroll.addEventListener('scroll', () => {
-      const searchHeader = document.getElementById('searchHeader');
-      if (!searchHeader || !document.getElementById('tab-history').classList.contains('active')) return;
+      const historyHeader = document.getElementById('historyHeader');
+      if (!historyHeader || !document.getElementById('tab-history').classList.contains('active')) return;
       
       let st = mainScroll.scrollTop;
       
       if (st > lastScrollTop && st > 60) {
-        searchHeader.style.transform = 'translateY(-120%)';
+        historyHeader.style.transform = 'translateY(-100%)';
       } 
       else {
-        searchHeader.style.transform = 'translateY(0)';
+        historyHeader.style.transform = 'translateY(0)';
       }
       
       lastScrollTop = st <= 0 ? 0 : st;
@@ -490,11 +600,14 @@
     const renderRecords = () => {
       const recordsContainer = document.getElementById('recordsContainer');
       const recordCount = document.getElementById('recordCount');
+      const headerTotalPaid = document.getElementById('headerTotalPaid'); 
       
       const nameTerm = document.getElementById('searchName').value.toLowerCase().trim();
       const numTerm = document.getElementById('searchNumber').value.replace(/\D/g, ''); 
       const dateTerm = document.getElementById('searchDate').value;
       
+      let totalPaid = 0;
+
       const filtered = recordsData.filter(r => {
         let matchName = true;
         let matchNum = true;
@@ -502,7 +615,9 @@
 
         if (nameTerm) {
           const uName = String(r.userName || '').toLowerCase();
-          matchName = uName.includes(nameTerm);
+          const p1000 = parseStatus(r.status1000x).playerId.toLowerCase();
+          const p615 = parseStatus(r.status615x).playerId.toLowerCase();
+          matchName = uName.includes(nameTerm) || p1000.includes(nameTerm) || p615.includes(nameTerm);
         }
         if (numTerm) {
           const uNum = String(r.number || '');
@@ -512,10 +627,20 @@
           matchDate = (r.date === dateTerm);
         }
 
-        return matchName && matchNum && matchDate;
+        const isMatch = matchName && matchNum && matchDate;
+        
+        if (isMatch) {
+          const stat1000x = parseStatus(r.status1000x).status;
+          const stat615x = parseStatus(r.status615x).status;
+          if (stat1000x === 'Paid') totalPaid += (Number(r.total1000x) || 0);
+          if (stat615x === 'Paid') totalPaid += (Number(r.total615x) || 0);
+        }
+
+        return isMatch;
       });
       
       recordCount.innerText = filtered.length;
+      headerTotalPaid.innerText = `৳${totalPaid.toLocaleString('en-US')}`; 
 
       if (filtered.length === 0) { 
         recordsContainer.innerHTML = ''; 
@@ -526,23 +651,66 @@
       
       let html = '';
       filtered.forEach(record => {
-        const renderAction = (type, total, status) => {
-          if(total === 0) return '';
-          let isPaid = status === 'Paid';
-          let statusBadge = `<span class="text-[11px] font-black tracking-wider uppercase flex items-center gap-1 ${isPaid ? 'text-emerald-400' : 'text-amber-400'}"><i class="fa-solid ${isPaid ? 'fa-check-double' : 'fa-hourglass-half'}"></i> ${status}</span>`;
+        
+        const renderAction = (type, total, statusStr) => {
+          const parsed = parseStatus(statusStr);
+          if(parsed.status === 'N/A') return '';
           
-          let actionBtns = status === 'Pending' ? `
+          let isPaid = parsed.status === 'Paid';
+          let isRejected = parsed.status === 'Rejected';
+          
+          let statusText = isPaid ? 'PAID' : (isRejected ? 'REJECTED' : 'DUE');
+          let badgeClass = isPaid ? 'text-emerald-400' : (isRejected ? 'text-red-500' : 'text-amber-400');
+          let iconClass = isPaid ? 'fa-check-double' : (isRejected ? 'fa-ban' : 'fa-hourglass-half');
+          
+          let statusBadge = `<span class="text-[11px] font-black tracking-wider uppercase flex items-center gap-1 ${badgeClass}"><i class="fa-solid ${iconClass}"></i> ${statusText}</span>`;
+          
+          let playerIdHtml = parsed.playerId ? `<div class="text-[11px] text-slate-400 mt-1 font-mono"><span class="text-slate-500">ID:</span> ${parsed.playerId}</div>` : '';
+          let itemTrxIdHtml = parsed.itemTrxId ? `<div class="text-[11px] text-sky-400 mt-0.5 font-mono"><span class="text-slate-500">TrxID:</span> ${parsed.itemTrxId}</div>` : '';
+
+          let inlineTrxInput = '';
+          if(parsed.status === 'Pending') {
+            inlineTrxInput = `
+              <div class="mt-2.5">
+                <input type="text" id="inline-trx-${record.id}-${type}" placeholder="Paste TrxID for ${type}..." class="w-full px-3 py-2 bg-[#0b1120] border border-[#334155] border-dashed focus:border-solid text-sky-100 placeholder-slate-500 rounded-lg focus:border-sky-500 outline-none text-[11px] font-mono">
+              </div>
+            `;
+          }
+
+          let actionBtns = parsed.status === 'Pending' ? `
+            ${inlineTrxInput}
             <div class="flex gap-2 mt-2 w-full">
-              <button onclick="updateStatus(${record.id}, '${type}', 'Paid')" class="flex-1 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded text-xs font-bold active:bg-emerald-500/20 transition-colors">Paid</button>
+              <button onclick="updateStatus(${record.id}, '${type}', 'Paid')" class="flex-1 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded text-xs font-bold active:bg-emerald-500/20 transition-colors">Mark Paid</button>
               <button onclick="updateStatus(${record.id}, '${type}', 'Rejected')" class="flex-1 py-1.5 bg-red-500/10 text-red-400 border border-red-500/30 rounded text-xs font-bold active:bg-red-500/20 transition-colors">Reject</button>
             </div>` : '';
             
+          let qtyDisp = record['qty'+type] || '?';
+          let rateDisp = record['rate'+type] ? `৳${record['rate'+type]}` : '?';
+          let totalHtml = total > 0 ? `৳${total.toLocaleString()}` : `<span class="text-[10px] text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded">TBD</span>`;
+
           return `<div class="p-3 rounded-xl border ${type === '1000x' ? 'bg-[#0b1120] border-[#334155]' : 'bg-[#0b1120] border-[#334155]'} mt-2">
-            <div class="flex justify-between items-center"><span class="text-xs font-bold text-slate-300">${type} ID: <span class="text-slate-400">${record['qty'+type]}x৳${record['rate'+type]}</span></span>
-            <div class="flex items-center gap-2"><span class="text-sm font-black text-sky-400">৳${total.toLocaleString()}</span>${statusBadge}</div></div>${actionBtns}</div>`;
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-xs font-bold text-slate-300">${type} ID: <span class="text-slate-400">${qtyDisp} x ${rateDisp}</span></span>
+                ${playerIdHtml}
+                ${itemTrxIdHtml}
+              </div>
+              <div class="flex flex-col items-end gap-1.5">
+                <span class="text-sm font-black text-sky-400 leading-none">${totalHtml}</span>
+                ${statusBadge}
+              </div>
+            </div>
+            ${actionBtns}
+          </div>`;
         };
 
         const mBadge = { bKash: 'bg-pink-500/20 text-pink-400 border border-pink-500/30', Nagad: 'bg-orange-500/20 text-orange-400 border border-orange-500/30', Rocket: 'bg-purple-500/20 text-purple-400 border border-purple-500/30', Binance: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' }[record.method] || 'bg-slate-700 text-slate-300 border border-slate-600';
+
+        const isExpanded = expandedRecordIds.has(Number(record.id));
+        const detailsStyle = isExpanded 
+          ? "max-height: 2000px; opacity: 1; margin-top: 12px;" 
+          : "max-height: 0px; opacity: 0; margin-top: 0px;";
+        const iconTransform = isExpanded ? "rotate(180deg)" : "rotate(0deg)";
 
         html += `
           <div class="bg-[#1e293b] rounded-2xl shadow-sm border border-[#334155] p-4 relative overflow-hidden">
@@ -559,21 +727,25 @@
               <div class="text-right flex flex-col items-end">
                 <p class="text-lg font-black text-sky-400 leading-none mb-1.5">৳${record.grandTotal.toLocaleString()}</p>
                 <div class="flex items-center gap-1 text-[10px] font-bold text-slate-400 bg-[#0b1120] border border-[#334155] px-2 py-1 rounded-full">
-                  Details <i id="icon-${record.id}" class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                  Details <i id="icon-${record.id}" class="fa-solid fa-chevron-down transition-transform duration-300" style="transform: ${iconTransform}"></i>
                 </div>
               </div>
             </div>
             
-            <!-- Hidden Details Section with Animation -->
-            <div id="details-${record.id}" class="transition-all duration-300 ease-in-out overflow-hidden" style="max-height: 0px; opacity: 0; margin-top: 0px;">
+            <!-- Details Section -->
+            <div id="details-${record.id}" class="details-panel overflow-hidden" style="${detailsStyle}">
               <div class="pt-3 border-t border-[#334155]">
                 <div class="flex items-center gap-2 mb-3">
                   <span class="${mBadge} px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide">${record.method}</span>
                   <span class="text-xs font-mono font-bold text-slate-300">${record.number}</span>
                 </div>
-                ${record.trxId ? `<div class="bg-[#0b1120] border border-[#334155] rounded-md px-2 py-1.5 text-[11px] font-mono text-slate-400 mb-2">TrxID: <span class="text-white font-semibold">${record.trxId}</span></div>` : ''}
                 
-                <div class="mb-4">${renderAction('1000x', record.total1000x, record.status1000x)}${renderAction('615x', record.total615x, record.status615x)}</div>
+                ${record.trxId ? `<div class="bg-[#0b1120] border border-[#334155] rounded-md px-2 py-1.5 text-[11px] font-mono text-slate-400 mb-3">Main TrxID: <span class="text-white font-semibold">${record.trxId}</span></div>` : ''}
+                
+                <div class="mb-4">
+                  ${renderAction('1000x', record.total1000x, record.status1000x)}
+                  ${renderAction('615x', record.total615x, record.status615x)}
+                </div>
                 
                 <div class="grid grid-cols-4 gap-2 border-t border-[#334155] pt-3">
                   <button onclick="editRecord(${record.id})" class="col-span-1 py-2 bg-[#0b1120] text-slate-300 text-[10px] font-bold rounded-lg border border-[#334155] active:bg-slate-700 transition-colors"><i class="fa-solid fa-pen"></i> Edit</button>
@@ -603,9 +775,6 @@
     };
 
     const sendActionToSheet = async (actionType, recordData) => {
-      const syncStatus = document.getElementById('syncStatus');
-      syncStatus.innerHTML = '<i class="fa-solid fa-arrows-rotate fa-spin text-sky-400"></i> Syncing...';
-
       try {
         await fetch(GOOGLE_SHEET_URL, {
           method: 'POST',
@@ -614,8 +783,7 @@
           body: JSON.stringify({ action: actionType, data: recordData })
         });
         saveLocalData();
-        syncStatus.innerHTML = '<i class="fa-solid fa-cloud-check text-emerald-400"></i> Synced Successfully';
-        setTimeout(() => updateConnectionUI(navigator.onLine), 3000);
+        updateConnectionUI(navigator.onLine);
       } catch (error) {
         saveLocalData();
         updateConnectionUI(false); 
@@ -628,10 +796,14 @@
     const methodInput = document.getElementById('method');
     const numberInput = document.getElementById('number');
     const trxIdInput = document.getElementById('trxId');
+    
     const qty1000x = document.getElementById('qty1000x');
     const rate1000x = document.getElementById('rate1000x');
+    const playerId1000x = document.getElementById('playerId1000x');
+    
     const qty615x = document.getElementById('qty615x');
     const rate615x = document.getElementById('rate615x');
+    const playerId615x = document.getElementById('playerId615x'); 
 
     const calculateTotals = () => {
       const t1000x = (Number(qty1000x.value) || 0) * (Number(rate1000x.value) || 0);
@@ -648,7 +820,22 @@
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const totals = calculateTotals();
-      if (totals.total === 0) return showToast("দয়া করে পরিমাণ এবং রেট দিন", "error");
+      
+      const q1 = Number(qty1000x.value) || 0;
+      const r1 = Number(rate1000x.value) || 0;
+      const q2 = Number(qty615x.value) || 0;
+      const r2 = Number(rate615x.value) || 0;
+      let pid1 = playerId1000x.value.trim();
+      let pid2 = playerId615x.value.trim();
+
+      const isActive1 = q1 > 0 || r1 > 0 || pid1 !== '';
+      const isActive2 = q2 > 0 || r2 > 0 || pid2 !== '';
+
+      if (!isActive1 && !isActive2) {
+        return showToast("Please enter amount, rate, or at least one ID", "error");
+      }
+
+      showToast("Saving data...", "info");
 
       const btn = document.getElementById('submitBtn');
       btn.innerHTML = '<div class="loader"></div> <span class="ml-2">Saving...</span>';
@@ -656,6 +843,24 @@
 
       const rawDate = dateInput.value;
       const formattedDate = formatDate(rawDate);
+      
+      let stat1 = isActive1 ? 'Pending' : 'N/A';
+      let stat2 = isActive2 ? 'Pending' : 'N/A';
+      
+      let itemTrx1 = '';
+      let itemTrx2 = '';
+
+      if (editingId) {
+        const index = recordsData.findIndex(r => r.id === editingId);
+        if (index !== -1) {
+          const old1 = parseStatus(recordsData[index].status1000x);
+          const old2 = parseStatus(recordsData[index].status615x);
+          stat1 = isActive1 ? (old1.status !== 'N/A' ? old1.status : 'Pending') : 'N/A';
+          stat2 = isActive2 ? (old2.status !== 'N/A' ? old2.status : 'Pending') : 'N/A';
+          itemTrx1 = old1.itemTrxId;
+          itemTrx2 = old2.itemTrxId;
+        }
+      }
 
       const recordToSave = {
         id: editingId || getNextId(),
@@ -665,32 +870,30 @@
         method: methodInput.value,
         number: numberInput.value,
         trxId: trxIdInput.value.trim(),
-        qty1000x: Number(qty1000x.value) || 0,
-        rate1000x: Number(rate1000x.value) || 0,
+        qty1000x: q1,
+        rate1000x: r1,
         total1000x: totals.t1000x,
-        qty615x: Number(qty615x.value) || 0,
-        rate615x: Number(rate615x.value) || 0,
+        qty615x: q2,
+        rate615x: r2,
         total615x: totals.t615x,
         grandTotal: totals.total,
-        status1000x: totals.t1000x > 0 ? 'Pending' : 'N/A',
-        status615x: totals.t615x > 0 ? 'Pending' : 'N/A'
+        status1000x: buildStatus(stat1, pid1, itemTrx1),
+        status615x: buildStatus(stat2, pid2, itemTrx2)
       };
 
       if (editingId) {
         const index = recordsData.findIndex(r => r.id === editingId);
         if (index !== -1) {
-          recordToSave.status1000x = recordsData[index].status1000x;
-          recordToSave.status615x = recordsData[index].status615x;
           recordsData[index] = recordToSave;
         }
         sendActionToSheet('updateRecord', recordToSave).then(() => {
-          showToast("Record Updated!");
+          showToast("Record Updated!", "update");
           resetForm();
         });
       } else {
         recordsData.unshift(recordToSave);
         sendActionToSheet('addRecord', recordToSave).then(() => {
-          showToast("New Record Saved!");
+          showToast("New Record Saved!", "save");
           resetForm();
         });
       }
@@ -702,7 +905,7 @@
       setTodayDate();
       calculateTotals();
       const btn = document.getElementById('submitBtn');
-      btn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Save Record';
+      btn.innerHTML = `<i class="fa-solid fa-check-circle"></i> Save Record`;
       btn.className = "w-full py-4 bg-sky-500 active:bg-sky-600 text-white font-bold rounded-b-2xl transition-colors shadow-[0_4px_14px_rgba(14,165,233,0.3)] flex justify-center items-center gap-2 text-lg";
       btn.disabled = false;
       switchTab('history');
@@ -717,16 +920,23 @@
       methodInput.value = r.method;
       numberInput.value = r.number;
       trxIdInput.value = r.trxId || '';
+      
+      const p1000 = parseStatus(r.status1000x);
+      const p615 = parseStatus(r.status615x);
+
       qty1000x.value = r.qty1000x || '';
       rate1000x.value = r.rate1000x || '';
+      playerId1000x.value = p1000.playerId;
+      
       qty615x.value = r.qty615x || '';
       rate615x.value = r.rate615x || '';
+      playerId615x.value = p615.playerId;
       
       calculateTotals();
       switchTab('new');
       
       const btn = document.getElementById('submitBtn');
-      btn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Update Record';
+      btn.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Update Record`;
       btn.className = "w-full py-4 bg-emerald-500 active:bg-emerald-600 text-white font-bold rounded-b-2xl transition-colors shadow-[0_4px_14px_rgba(16,185,129,0.3)] flex justify-center items-center gap-2 text-lg";
     };
 
@@ -735,7 +945,7 @@
         recordsData = recordsData.filter(r => r.id !== id);
         renderRecords(); 
         sendActionToSheet('deleteRecord', { id: id }).then(() => {
-          showToast("Record Deleted", "success");
+          showToast("Record Deleted!", "delete");
         });
       });
     };
@@ -743,10 +953,21 @@
     window.updateStatus = (id, type, status) => {
       const idx = recordsData.findIndex(r => r.id === id);
       if (idx !== -1) {
-        if (type === '1000x') recordsData[idx].status1000x = status;
-        if (type === '615x') recordsData[idx].status615x = status;
+        const parsed = parseStatus(recordsData[idx]['status' + type]);
+        
+        const inlineTrxInput = document.getElementById(`inline-trx-${id}-${type}`);
+        let newItemTrxId = parsed.itemTrxId;
+        
+        if (inlineTrxInput && inlineTrxInput.value.trim() !== '') {
+          newItemTrxId = inlineTrxInput.value.trim();
+        }
+
+        recordsData[idx]['status' + type] = buildStatus(status, parsed.playerId, newItemTrxId);
+        
+        saveLocalData(); 
         sendActionToSheet('updateRecord', recordsData[idx]);
-        saveLocalData();
+        
+        showToast(status === 'Paid' ? "Payment Marked as Paid!" : "Payment Rejected!", status === 'Paid' ? "paid" : "reject");
       }
     };
 
@@ -757,132 +978,128 @@
     // ==========================================
     // MODERN HTML GENERATOR FOR RECEIPTS 
     // ==========================================
-    const generateReceiptHTML = (record, isFullyPaid) => {
-      // Dynamic Theme Palette
-      const t = receiptTheme === 'dark' ? {
-        bg: '#0f172a',
-        text: '#f8fafc',
-        muted: '#94a3b8',
-        border: '#334155',
-        cardBg: '#1e293b',
-        primary: '#0ea5e9',
-        totalBg: '#0ea5e9',
-        totalText: '#ffffff',
-        trxBg: '#022c22',
-        trxBorder: '#059669',
-        trxText: '#34d399',
-        badgePaidBg: '#064e3b',
-        badgePaidText: '#34d399',
-        badgePendingBg: '#451a03',
-        badgePendingText: '#fbbf24'
+    const generateReceiptHTML = (record, isFullyPaid, isRejected) => {
+      const th = receiptTheme === 'dark' ? {
+        bg: '#0f172a', text: '#f8fafc', muted: '#94a3b8', border: '#334155', cardBg: '#1e293b', primary: '#0ea5e9', totalBg: '#0ea5e9', totalText: '#ffffff', trxBg: '#022c22', trxBorder: '#059669', trxText: '#34d399', badgePaidText: '#34d399', badgePendingText: '#fbbf24'
       } : {
-        bg: '#ffffff',
-        text: '#0f172a',
-        muted: '#64748b',
-        border: '#e2e8f0',
-        cardBg: '#f8fafc',
-        primary: '#2563eb',
-        totalBg: '#0f172a',
-        totalText: '#ffffff',
-        trxBg: '#ecfdf5',
-        trxBorder: '#10b981',
-        trxText: '#047857',
-        badgePaidBg: '#dcfce7',
-        badgePaidText: '#059669',
-        badgePendingBg: '#fef3c7',
-        badgePendingText: '#d97706'
+        bg: '#ffffff', text: '#0f172a', muted: '#64748b', border: '#e2e8f0', cardBg: '#f8fafc', primary: '#2563eb', totalBg: '#0f172a', totalText: '#ffffff', trxBg: '#ecfdf5', trxBorder: '#10b981', trxText: '#047857', badgePaidText: '#059669', badgePendingText: '#d97706'
       };
 
-      const overallStatus = isFullyPaid 
-        ? `<div style="color: ${t.badgePaidText}; font-size: 14px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px;">✓ PAID IN FULL</div>` 
-        : `<div style="color: ${t.badgePendingText}; font-size: 14px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px;">⏱ PAYMENT PENDING</div>`;
+      let overallStatusHtml = '';
+      if (isRejected) {
+          overallStatusHtml = `<div style="color: #ef4444; font-size: 14px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px;">✕ PAYMENT REJECTED</div>`;
+      } else if (isFullyPaid) {
+          overallStatusHtml = `<div style="color: ${th.badgePaidText}; font-size: 14px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px;">✓ PAID IN FULL</div>`;
+      } else {
+          overallStatusHtml = `<div style="color: ${th.badgePendingText}; font-size: 14px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px;">⏱ PAYMENT DUE</div>`;
+      }
+
+      const p1000 = parseStatus(record.status1000x);
+      const p615 = parseStatus(record.status615x);
+      
+      const getReceiptStatusHelper = (status) => {
+          if (status === 'Paid') return {text: '✓ PAID', color: th.badgePaidText};
+          if (status === 'Rejected') return {text: '✕ REJECTED', color: '#ef4444'};
+          return {text: '⏱ DUE', color: th.badgePendingText};
+      };
+
+      const s1000 = getReceiptStatusHelper(p1000.status);
+      const s615 = getReceiptStatusHelper(p615.status);
 
       return `
-        <div id="receiptContent" style="width: 540px; padding: 40px; background: ${t.bg}; font-family: 'Inter', sans-serif; color: ${t.text}; border: 1px solid ${t.border}; box-sizing: border-box;">
+        <div id="receiptContent" style="width: 540px; padding: 40px; background: ${th.bg}; font-family: 'Inter', sans-serif; color: ${th.text}; border: 1px solid ${th.border}; box-sizing: border-box;">
           
-          <!-- Header -->
-          <table style="width: 100%; border-bottom: 2px dashed ${t.border}; padding-bottom: 25px; margin-bottom: 30px; border-collapse: collapse;">
+          <table style="width: 100%; border-bottom: 2px dashed ${th.border}; padding-bottom: 25px; margin-bottom: 30px; border-collapse: collapse;">
             <tr>
               <td style="vertical-align: middle;">
-                <h1 style="margin: 0 0 8px 0; font-size: 32px; font-weight: 900; letter-spacing: -1px; color: ${t.primary};">RECEIPT</h1>
-                ${overallStatus}
+                <h1 style="margin: 0 0 8px 0; font-size: 32px; font-weight: 900; letter-spacing: -1px; color: ${th.primary};">RECEIPT</h1>
+                ${overallStatusHtml}
               </td>
               <td style="vertical-align: middle; text-align: right;">
-                <div style="color: ${t.muted}; font-size: 10px; text-transform: uppercase; font-weight: 800; letter-spacing: 1.5px; margin-bottom: 4px;">Date</div>
-                <div style="font-size: 16px; font-weight: 800; color: ${t.text};">${record.displayDate || 'N/A'}</div>
+                <div style="color: ${th.muted}; font-size: 10px; text-transform: uppercase; font-weight: 800; letter-spacing: 1.5px; margin-bottom: 4px;">Date</div>
+                <div style="font-size: 16px; font-weight: 800; color: ${th.text};">${record.displayDate || 'N/A'}</div>
               </td>
             </tr>
           </table>
 
-          <!-- Transaction ID -->
           ${record.trxId ? `
-          <div style="background: ${t.trxBg}; border: 1px dashed ${t.trxBorder}; padding: 16px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
-            <p style="margin: 0; color: ${t.trxBorder}; font-size: 11px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-bottom: 4px;">Transaction ID</p>
-            <p style="margin: 0; font-size: 20px; font-weight: 800; color: ${t.trxText}; font-family: monospace; letter-spacing: 1px;">${record.trxId}</p>
+          <div style="background: ${th.trxBg}; border: 1px dashed ${th.trxBorder}; padding: 16px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
+            <p style="margin: 0; color: ${th.trxBorder}; font-size: 11px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-bottom: 4px;">Main Transaction ID</p>
+            <p style="margin: 0; font-size: 20px; font-weight: 800; color: ${th.trxText}; font-family: monospace; letter-spacing: 1px;">${record.trxId}</p>
           </div>
           ` : ''}
 
-          <!-- Customer & Account -->
-          <table style="width: 100%; background: ${t.cardBg}; border-radius: 16px; margin-bottom: 35px; border-collapse: collapse; overflow: hidden;">
+          <table style="width: 100%; background: ${th.cardBg}; border-radius: 16px; margin-bottom: 35px; border-collapse: collapse; overflow: hidden;">
             <tr>
-              <td style="width: 50%; padding: 24px; border-right: 1px solid ${t.border}; vertical-align: top;">
-                <p style="margin: 0 0 8px 0; color: ${t.muted}; font-size: 10px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Billed To</p>
-                <p style="margin: 0; font-size: 20px; font-weight: 800; color: ${t.text}; line-height: 1.3;">${record.userName}</p>
+              <td style="width: 50%; padding: 24px; border-right: 1px solid ${th.border}; vertical-align: top;">
+                <p style="margin: 0 0 8px 0; color: ${th.muted}; font-size: 10px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Billed To</p>
+                <p style="margin: 0; font-size: 20px; font-weight: 800; color: ${th.text}; line-height: 1.3;">${record.userName}</p>
               </td>
-              <td style="width: 50%; padding: 24px; vertical-align: top;">
-                <p style="margin: 0 0 8px 0; color: ${t.muted}; font-size: 10px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Payment Method</p>
-                <p style="margin: 0; font-size: 18px; font-weight: 800; color: ${t.text}; margin-bottom: 4px;">${record.method}</p>
-                <p style="margin: 0; color: ${t.primary}; font-weight: 800; font-size: 16px; font-family: monospace; letter-spacing: 1px;">${record.number}</p>
+              <td style="width: 50%; padding: 24px; text-align: center; vertical-align: top;">
+                <p style="margin: 0 0 8px 0; color: ${th.muted}; font-size: 10px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Payment Method</p>
+                <p style="margin: 0; font-size: 18px; font-weight: 800; color: ${th.text}; margin-bottom: 2px;">${record.method}</p>
+                <p style="margin: 0; color: ${th.primary}; font-weight: 800; font-size: 16px; font-family: monospace; letter-spacing: 1px;">${record.number}</p>
               </td>
             </tr>
           </table>
 
-          <!-- Items Table -->
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
             <tr>
-              <td style="padding-bottom: 12px; font-size: 11px; color: ${t.muted}; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; border-bottom: 2px solid ${t.border};">Item Details</td>
-              <td style="padding-bottom: 12px; font-size: 11px; color: ${t.muted}; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; text-align: center; width: 140px; border-bottom: 2px solid ${t.border};">Qty × Rate</td>
-              <td style="padding-bottom: 12px; font-size: 11px; color: ${t.muted}; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; text-align: right; width: 110px; border-bottom: 2px solid ${t.border};">Subtotal</td>
+              <td style="padding-bottom: 12px; font-size: 11px; color: ${th.muted}; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; border-bottom: 2px solid ${th.border};">Item Details</td>
+              <td style="padding-bottom: 12px; font-size: 11px; color: ${th.muted}; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; text-align: center; width: 140px; border-bottom: 2px solid ${th.border};">Qty × Rate</td>
+              <td style="padding-bottom: 12px; font-size: 11px; color: ${th.muted}; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; text-align: right; width: 110px; border-bottom: 2px solid ${th.border};">Subtotal</td>
             </tr>
           </table>
 
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 40px;">
             <tbody>
-              ${record.total1000x > 0 ? `
+              ${p1000.status !== 'N/A' ? `
               <tr>
-                <td style="padding: 20px 0; border-bottom: 1px solid ${t.border}; vertical-align: middle;">
-                  <div style="font-weight: 800; font-size: 16px; color: ${t.text}; margin-bottom: 6px;">1000x ID</div>
-                  <div><span style="color: ${record.status1000x === 'Paid' ? t.badgePaidText : t.badgePendingText}; font-weight: 900; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;">${record.status1000x === 'Paid' ? '✓ PAID' : '⏱ PENDING'}</span></div>
+                <td style="padding: 20px 0; border-bottom: 1px solid ${th.border}; vertical-align: middle;">
+                  <div style="font-weight: 800; font-size: 16px; color: ${th.text}; margin-bottom: ${p1000.playerId ? '4px' : '6px'};">1000x ID</div>
+                  ${p1000.playerId ? `<div style="font-size: 12px; color: ${th.muted}; font-family: monospace; margin-bottom: 4px; font-weight: 600;">ID: ${p1000.playerId}</div>` : ''}
+                  ${p1000.itemTrxId ? `<div style="font-size: 11px; color: ${th.primary}; font-family: monospace; margin-bottom: 8px; font-weight: 600;">Trx: ${p1000.itemTrxId}</div>` : ''}
+                  <div><span style="color: ${s1000.color}; font-weight: 900; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;">${s1000.text}</span></div>
                 </td>
-                <td style="padding: 20px 0; border-bottom: 1px solid ${t.border}; text-align: center; color: ${t.text}; font-weight: 700; font-size: 15px;">${record.qty1000x} <span style="color: ${t.muted}; font-size: 14px; margin: 0 4px;">×</span> ৳${record.rate1000x}</td>
-                <td style="padding: 20px 0; border-bottom: 1px solid ${t.border}; text-align: right; font-weight: 800; font-size: 17px; color: ${t.text};">৳${record.total1000x.toLocaleString('en-US')}</td>
+                <td style="padding: 20px 0; border-bottom: 1px solid ${th.border}; text-align: center; color: ${th.text}; font-weight: 700; font-size: 15px;">
+                  ${record.total1000x > 0 ? `${record.qty1000x} <span style="color: ${th.muted}; font-size: 14px; margin: 0 4px;">×</span> ৳${record.rate1000x}` : `<span style="color: ${th.muted}; font-size: 12px;">--</span>`}
+                </td>
+                <td style="padding: 20px 0; border-bottom: 1px solid ${th.border}; text-align: right; font-weight: 800; font-size: 17px; color: ${th.text};">
+                  ${record.total1000x > 0 ? `৳${record.total1000x.toLocaleString('en-US')}` : `<span style="color: ${th.muted}; font-size: 12px;">--</span>`}
+                </td>
               </tr>
               ` : ''}
-              ${record.total615x > 0 ? `
+              ${p615.status !== 'N/A' ? `
               <tr>
-                <td style="padding: 20px 0; border-bottom: 1px solid ${t.border}; vertical-align: middle;">
-                  <div style="font-weight: 800; font-size: 16px; color: ${t.text}; margin-bottom: 6px;">615x ID</div>
-                  <div><span style="color: ${record.status615x === 'Paid' ? t.badgePaidText : t.badgePendingText}; font-weight: 900; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;">${record.status615x === 'Paid' ? '✓ PAID' : '⏱ PENDING'}</span></div>
+                <td style="padding: 20px 0; border-bottom: 1px solid ${th.border}; vertical-align: middle;">
+                  <div style="font-weight: 800; font-size: 16px; color: ${th.text}; margin-bottom: ${p615.playerId ? '4px' : '6px'};">615x ID</div>
+                  ${p615.playerId ? `<div style="font-size: 12px; color: ${th.muted}; font-family: monospace; margin-bottom: 4px; font-weight: 600;">ID: ${p615.playerId}</div>` : ''}
+                  ${p615.itemTrxId ? `<div style="font-size: 11px; color: ${th.primary}; font-family: monospace; margin-bottom: 8px; font-weight: 600;">Trx: ${p615.itemTrxId}</div>` : ''}
+                  <div><span style="color: ${s615.color}; font-weight: 900; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;">${s615.text}</span></div>
                 </td>
-                <td style="padding: 20px 0; border-bottom: 1px solid ${t.border}; text-align: center; color: ${t.text}; font-weight: 700; font-size: 15px;">${record.qty615x} <span style="color: ${t.muted}; font-size: 14px; margin: 0 4px;">×</span> ৳${record.rate615x}</td>
-                <td style="padding: 20px 0; border-bottom: 1px solid ${t.border}; text-align: right; font-weight: 800; font-size: 17px; color: ${t.text};">৳${record.total615x.toLocaleString('en-US')}</td>
+                <td style="padding: 20px 0; border-bottom: 1px solid ${th.border}; text-align: center; color: ${th.text}; font-weight: 700; font-size: 15px;">
+                  ${record.total615x > 0 ? `${record.qty615x} <span style="color: ${th.muted}; font-size: 14px; margin: 0 4px;">×</span> ৳${record.rate615x}` : `<span style="color: ${th.muted}; font-size: 12px;">--</span>`}
+                </td>
+                <td style="padding: 20px 0; border-bottom: 1px solid ${th.border}; text-align: right; font-weight: 800; font-size: 17px; color: ${th.text};">
+                  ${record.total615x > 0 ? `৳${record.total615x.toLocaleString('en-US')}` : `<span style="color: ${th.muted}; font-size: 12px;">--</span>`}
+                </td>
               </tr>
               ` : ''}
             </tbody>
           </table>
 
           <!-- Grand Total -->
-          <div style="background: ${t.totalBg}; border-radius: 16px; padding: 24px 30px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; box-shadow: 0 10px 25px rgba(14, 165, 233, 0.2);">
+          <div style="background: ${th.totalBg}; border-radius: 16px; padding: 24px 30px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; box-shadow: 0 10px 25px rgba(14, 165, 233, 0.2);">
             <div style="color: rgba(255,255,255,0.8); font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Total Amount</div>
-            <div style="color: ${t.totalText}; font-size: 34px; font-weight: 900; letter-spacing: -1px;">৳${record.grandTotal.toLocaleString('en-US')}</div>
+            <div style="color: ${th.totalText}; font-size: 34px; font-weight: 900; letter-spacing: -1px;">৳${record.grandTotal.toLocaleString('en-US')}</div>
           </div>
 
           <!-- Footer -->
-          <div style="text-align: center; border-top: 2px dashed ${t.border}; pt-8; padding-top: 30px;">
+          <div style="text-align: center; border-top: 2px dashed ${th.border}; pt-8; padding-top: 30px;">
             <div style="display: inline-block; margin-bottom: 8px;">
-              <span style="font-size: 14px; font-weight: 800; color: ${t.text}; letter-spacing: 0.5px;">${isFullyPaid ? 'Payment Verified Successfully' : 'Payment Unverified'}</span>
+              <span style="font-size: 14px; font-weight: 800; color: ${th.text}; letter-spacing: 0.5px;">${isRejected ? 'Payment Cancelled/Rejected' : (isFullyPaid ? 'Payment Verified Successfully' : 'Payment Unverified')}</span>
             </div>
-            <p style="margin: 0; font-size: 12px; color: ${t.muted}; font-weight: 600;">Generated Securely by <span style="color: ${t.primary}; font-weight: 800;">MK NETWORK</span></p>
+            <p style="margin: 0; font-size: 12px; color: ${th.muted}; font-weight: 600;">Generated Securely by <span style="color: ${th.primary}; font-weight: 800;">MK NETWORK</span></p>
           </div>
         </div>
       `;
@@ -891,16 +1108,44 @@
     window.downloadReceipt = async (id) => {
       const record = recordsData.find(r => r.id === id);
       if(!record) return;
-      showToast("Generating Image...", "success");
+      showToast("Generating Image...", "info");
 
-      const isFullyPaid = (record.total1000x > 0 ? record.status1000x === 'Paid' : true) && 
-                          (record.total615x > 0 ? record.status615x === 'Paid' : true);
+      let hasPending = false;
+      let hasPaid = false;
+      let hasRejected = false;
+
+      const p1000 = parseStatus(record.status1000x);
+      const p615 = parseStatus(record.status615x);
+
+      if (p1000.status !== 'N/A') {
+          if (p1000.status === 'Pending') hasPending = true;
+          else if (p1000.status === 'Paid') hasPaid = true;
+          else if (p1000.status === 'Rejected') hasRejected = true;
+      }
+      if (p615.status !== 'N/A') {
+          if (p615.status === 'Pending') hasPending = true;
+          else if (p615.status === 'Paid') hasPaid = true;
+          else if (p615.status === 'Rejected') hasRejected = true;
+      }
+
+      let isFullyPaid = false;
+      let isRejected = false;
+
+      if (hasPending) {
+          isFullyPaid = false;
+      } else if (hasPaid && !hasRejected) {
+          isFullyPaid = true;
+      } else if (hasRejected && !hasPaid) {
+          isRejected = true;
+      } else if (hasPaid && hasRejected) {
+          isFullyPaid = true; 
+      }
 
       const wrapper = document.createElement('div');
       wrapper.style.position = 'absolute';
       wrapper.style.top = '-9999px';
       wrapper.style.left = '-9999px';
-      wrapper.innerHTML = generateReceiptHTML(record, isFullyPaid);
+      wrapper.innerHTML = generateReceiptHTML(record, isFullyPaid, isRejected);
       document.body.appendChild(wrapper);
 
       try {
@@ -919,16 +1164,44 @@
     window.downloadPDF = async (id) => {
       const record = recordsData.find(r => r.id === id);
       if(!record) return;
-      showToast("Generating PDF...", "success");
+      showToast("Generating PDF...", "info");
 
-      const isFullyPaid = (record.total1000x > 0 ? record.status1000x === 'Paid' : true) && 
-                          (record.total615x > 0 ? record.status615x === 'Paid' : true);
+      let hasPending = false;
+      let hasPaid = false;
+      let hasRejected = false;
+
+      const p1000 = parseStatus(record.status1000x);
+      const p615 = parseStatus(record.status615x);
+
+      if (p1000.status !== 'N/A') {
+          if (p1000.status === 'Pending') hasPending = true;
+          else if (p1000.status === 'Paid') hasPaid = true;
+          else if (p1000.status === 'Rejected') hasRejected = true;
+      }
+      if (p615.status !== 'N/A') {
+          if (p615.status === 'Pending') hasPending = true;
+          else if (p615.status === 'Paid') hasPaid = true;
+          else if (p615.status === 'Rejected') hasRejected = true;
+      }
+
+      let isFullyPaid = false;
+      let isRejected = false;
+
+      if (hasPending) {
+          isFullyPaid = false;
+      } else if (hasPaid && !hasRejected) {
+          isFullyPaid = true;
+      } else if (hasRejected && !hasPaid) {
+          isRejected = true;
+      } else if (hasPaid && hasRejected) {
+          isFullyPaid = true; 
+      }
 
       const wrapper = document.createElement('div');
       wrapper.style.position = 'absolute';
       wrapper.style.top = '-9999px';
       wrapper.style.left = '-9999px';
-      wrapper.innerHTML = generateReceiptHTML(record, isFullyPaid);
+      wrapper.innerHTML = generateReceiptHTML(record, isFullyPaid, isRejected);
       document.body.appendChild(wrapper);
 
       const element = wrapper.querySelector('#receiptContent');
@@ -943,7 +1216,7 @@
       try {
         await html2pdf().set(opt).from(element).save();
         document.body.removeChild(wrapper);
-        showToast("PDF Downloaded", "success");
+        showToast("PDF Downloaded", "save");
       } catch(err) {
         document.body.removeChild(wrapper);
         showToast("Error generating PDF", "error");
