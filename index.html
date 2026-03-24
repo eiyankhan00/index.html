@@ -652,6 +652,12 @@
       let html = '';
       filtered.forEach(record => {
         
+        // NEW DUE LOGIC: Check if any item in this specific record is 'Pending'
+        const p1000Card = parseStatus(record.status1000x);
+        const p615Card = parseStatus(record.status615x);
+        const hasDue = p1000Card.status === 'Pending' || p615Card.status === 'Pending';
+        const dueBadgeHtml = hasDue ? `<span class="bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[8px] font-black px-1.5 py-0.5 rounded ml-2 uppercase tracking-widest">Due</span>` : '';
+
         const renderAction = (type, total, statusStr) => {
           const parsed = parseStatus(statusStr);
           if(parsed.status === 'N/A') return '';
@@ -719,8 +725,9 @@
             <!-- Visible Main Info -->
             <div class="flex justify-between items-start cursor-pointer select-none" onclick="toggleDetails(${record.id})">
               <div>
-                <h3 class="text-base font-bold text-white leading-tight flex items-center gap-2">
+                <h3 class="text-base font-bold text-white leading-tight flex items-center flex-wrap">
                   ${record.userName}
+                  ${dueBadgeHtml}
                 </h3>
                 <p class="text-[11px] text-slate-400 font-medium mt-1.5"><i class="fa-regular fa-calendar-days"></i> ${record.displayDate}</p>
               </div>
