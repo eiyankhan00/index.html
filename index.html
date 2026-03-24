@@ -102,7 +102,7 @@
 
     /* Recent Apps style smooth collapse & delete */
     .record-wrapper.removing {
-      transition: all 0.5s cubic-bezier(0.34, 1.15, 0.64, 1);
+      transition: all 0.4s cubic-bezier(0.34, 1.15, 0.64, 1);
       transform: scale(0.5) translateX(-100vw) !important;
       opacity: 0;
       max-height: 0 !important;
@@ -398,8 +398,7 @@
       return `${status}::${playerId || ''}::${itemTrxId || ''}`;
     };
 
-    let receiptTheme = 'dark'; 
-    window.toggleReceiptTheme = () => {
+    function toggleReceiptTheme() {
       const btn = document.getElementById('themeToggleBtn');
       if(receiptTheme === 'dark') {
         receiptTheme = 'light';
@@ -412,9 +411,10 @@
         btn.className = "text-[10px] bg-[#1e293b] text-sky-400 border border-sky-500/30 px-3 py-1.5 rounded-full font-bold active:bg-[#334155] flex items-center gap-1.5 whitespace-nowrap ios-bounce";
         showToast("Dark Theme Selected", "info");
       }
-    };
+    }
+    window.toggleReceiptTheme = toggleReceiptTheme;
 
-    window.toggleSearch = () => {
+    function toggleSearch() {
       const container = document.getElementById('searchContainer');
       const btnIcon = document.querySelector('#searchToggleBtn i');
       
@@ -431,7 +431,8 @@
         container.style.transform = 'translateY(-10px) scale(0.95)';
         btnIcon.className = 'fa-solid fa-magnifying-glass'; 
       }
-    };
+    }
+    window.toggleSearch = toggleSearch;
 
     const getNextId = () => {
       if (recordsData.length === 0) return 1;
@@ -622,7 +623,7 @@
       closeConfirmModal();
     });
 
-    window.toggleDetails = (id) => {
+    function toggleDetails(id) {
       const numId = Number(id);
       const detailsDiv = document.getElementById(`details-${id}`);
       const icon = document.getElementById(`icon-${id}`);
@@ -640,15 +641,17 @@
         detailsDiv.style.opacity = '1';
         icon.style.transform = 'rotate(180deg)';
       }
-    };
+    }
+    window.toggleDetails = toggleDetails;
 
-    window.clearFilters = () => {
+    function clearFilters() {
       document.getElementById('searchName').value = '';
       document.getElementById('searchNumber').value = '';
       document.getElementById('searchDate').value = '';
       renderedRecordIds.clear(); 
       renderRecords();
-    };
+    }
+    window.clearFilters = clearFilters;
 
     let lastScrollTop = 0;
     const mainScroll = document.getElementById('main-scroll');
@@ -670,57 +673,57 @@
     }, { passive: true });
 
     // ==========================================
-    // SWIPE TO DISMISS / DELETE LOGIC (Android 16/17 Perfected)
+    // SWIPE TO DISMISS / DELETE LOGIC (Android 16 Hold-to-Delete)
     // ==========================================
+    let swipeEventsAttached = false;
     function initSwipeToDismiss() {
+        if (swipeEventsAttached) return;
         const container = document.getElementById('recordsContainer');
+        if (!container) return;
+        swipeEventsAttached = true;
+        
         let activeCardInner = null;
         let activeWrapper = null;
         let startX = 0, startY = 0, currentX = 0;
         let isSwiping = false;
-        let siblings = []; // To store sibling elements for performance
+        
+        let prevInner = null;
+        let nextInner = null;
+
+        let holdTimer = null;
+        let deleteTriggered = false;
 
         container.addEventListener('touchstart', (e) => {
             const innerCard = e.target.closest('.record-card-inner');
             if (!innerCard) return;
-            
-            // Ignore swipe if touching buttons/inputs inside details
-            if (e.target.closest('button') || e.target.closest('input')) return;
+            if (e.target.closest('button') || e.target.closest('input') || e.target.closest('.details-panel')) return;
 
             activeCardInner = innerCard;
             activeWrapper = activeCardInner.closest('.record-wrapper');
             startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
             isSwiping = false;
+            deleteTriggered = false;
+            if (holdTimer) clearTimeout(holdTimer);
             
-            // Pre-calculate siblings for smooth rendering during swipe
-            const allWrappers = Array.from(container.querySelectorAll('.record-wrapper'));
-            const currentIndex = allWrappers.indexOf(activeWrapper);
+            const prevWrapper = activeWrapper.previousElementSibling;
+            const nextWrapper = activeWrapper.nextElementSibling;
             
-            siblings = allWrappers.map((sib, i) => {
-                if (i === currentIndex) return null;
-                const distance = Math.abs(i - currentIndex);
-                // Affect up to 3 adjacent items to create connected pull effect
-                if (distance <= 3) {
-                    return { el: sib.querySelector('.record-card-inner'), distance: distance };
-                }
-                return null;
-            }).filter(Boolean);
+            prevInner = prevWrapper ? prevWrapper.querySelector('.record-card-inner') : null;
+            nextInner = nextWrapper ? nextWrapper.querySelector('.record-card-inner') : null;
 
             activeCardInner.style.transition = 'none';
-            siblings.forEach(sib => {
-                if(sib.el) sib.el.style.transition = 'none';
-            });
+            if (prevInner) prevInner.style.transition = 'none';
+            if (nextInner) nextInner.style.transition = 'none';
         }, { passive: true });
 
         container.addEventListener('touchmove', (e) => {
-            if (!activeCardInner) return;
+            if (!activeCardInner || deleteTriggered) return;
 
             const diffX = e.touches[0].clientX - startX;
             const diffY = e.touches[0].clientY - startY;
 
             if (!isSwiping) {
-                // Detect horizontal swipe vs vertical scroll
                 if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
                     isSwiping = true;
                 } else if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 10) {
@@ -730,24 +733,51 @@
             }
 
             if (isSwiping) {
-                if (diffX < 0) { // Only swipe left
+                if (diffX < 0) { 
                     if(e.cancelable) e.preventDefault(); 
                     currentX = diffX;
                     
-                    // Dynamic Island / Android 16 elastic resistance
-                    // Moves 1:1 up to -100px, then slows down heavily
                     const translateVal = diffX > -100 ? diffX : -100 + (diffX + 100) * 0.25;
                     activeCardInner.style.transform = `translateX(${translateVal}px)`;
 
-                    // Sibling Tremble Effect (Android 16/17 Connected Pull)
-                    siblings.forEach(sib => {
-                        if (sib.el) {
-                            // Exponential decay: closest moves 12%, next 4%, next 1.3%
-                            const pullForce = 0.12 / Math.pow(3, sib.distance - 1); 
-                            const nudge = translateVal * pullForce;
-                            sib.el.style.transform = `translateX(${nudge}px)`;
-                        }
-                    });
+                    const pullForce = 0.08; 
+                    const nudge = translateVal * pullForce;
+                    
+                    if (prevInner) prevInner.style.transform = `translateX(${nudge}px)`;
+                    if (nextInner) nextInner.style.transform = `translateX(${nudge}px)`;
+
+                    // NEW: If pulled past -80px and held, trigger delete
+                    if (currentX < -80 && !holdTimer && !deleteTriggered) {
+                        holdTimer = setTimeout(() => {
+                            deleteTriggered = true;
+                            
+                            // Snap open smoothly
+                            const springTransition = 'transform 0.4s cubic-bezier(0.34, 1.15, 0.64, 1)';
+                            activeCardInner.style.transition = springTransition;
+                            activeCardInner.style.transform = `translateX(-100px)`;
+
+                            // Reset siblings
+                            if (prevInner) {
+                                prevInner.style.transition = springTransition;
+                                prevInner.style.transform = 'translateX(0px)';
+                            }
+                            if (nextInner) {
+                                nextInner.style.transition = springTransition;
+                                nextInner.style.transform = 'translateX(0px)';
+                            }
+
+                            const id = Number(activeCardInner.getAttribute('data-id'));
+                            const swipedElement = activeCardInner;
+                            
+                            if (typeof window.deleteRecord === 'function') {
+                                window.deleteRecord(id, swipedElement);
+                            }
+                        }, 400); // 0.4 seconds hold to trigger
+                    } else if (currentX >= -80 && holdTimer) {
+                        // If moved back before timer ends, cancel the hold timer
+                        clearTimeout(holdTimer);
+                        holdTimer = null;
+                    }
                 }
             }
         }, { passive: false });
@@ -755,38 +785,33 @@
         container.addEventListener('touchend', (e) => {
             if (!activeCardInner || !isSwiping) return;
             
-            // Beautiful spring physics curve for release
-            const springTransition = 'transform 0.6s cubic-bezier(0.34, 1.3, 0.64, 1)';
-            activeCardInner.style.transition = springTransition;
-            
-            if (currentX < -75) { // Threshold to trigger delete
-                // Snaps open to reveal delete icon
-                activeCardInner.style.transform = `translateX(-100px)`;
-                const id = Number(activeCardInner.getAttribute('data-id'));
-                const swipedElement = activeCardInner;
-                
-                // Trigger delete after a tiny visual delay
-                setTimeout(() => {
-                    window.deleteRecord(id, swipedElement);
-                }, 150);
-            } else {
-                // Bounce back
-                activeCardInner.style.transform = `translateX(0px)`;
+            if (holdTimer) {
+                clearTimeout(holdTimer);
+                holdTimer = null;
             }
+            
+            // If user just swiped and released quickly (didn't hold), always snap back
+            if (!deleteTriggered) {
+                const springTransition = 'transform 0.6s cubic-bezier(0.34, 1.3, 0.64, 1)';
+                activeCardInner.style.transition = springTransition;
+                activeCardInner.style.transform = `translateX(0px)`;
 
-            // Reset ALL siblings smoothly with the same spring
-            siblings.forEach(sib => {
-                if (sib.el) {
-                    sib.el.style.transition = springTransition;
-                    sib.el.style.transform = 'translateX(0px)';
+                if (prevInner) {
+                    prevInner.style.transition = springTransition;
+                    prevInner.style.transform = 'translateX(0px)';
                 }
-            });
+                if (nextInner) {
+                    nextInner.style.transition = springTransition;
+                    nextInner.style.transform = 'translateX(0px)';
+                }
+            }
             
             activeCardInner = null;
             activeWrapper = null;
+            prevInner = null;
+            nextInner = null;
             isSwiping = false;
             currentX = 0;
-            siblings = [];
         });
     }
 
@@ -1120,7 +1145,7 @@
       switchTab('history');
     };
 
-    window.editRecord = (id) => {
+    function editRecord(id) {
       const r = recordsData.find(r => r.id === id);
       if (!r) return;
       editingId = id;
@@ -1147,10 +1172,10 @@
       const btn = document.getElementById('submitBtn');
       btn.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Update Record`;
       btn.className = "w-full py-4 bg-emerald-500 active:bg-emerald-600 text-white font-bold rounded-b-2xl shadow-[0_4px_14px_rgba(16,185,129,0.3)] flex justify-center items-center gap-2 text-lg save-bounce";
-    };
+    }
+    window.editRecord = editRecord;
 
-    // Modified Delete logic to include Android 16 collapse animation
-    window.deleteRecord = (id, swipedCardElement = null) => {
+    function deleteRecord(id, swipedCardElement = null) {
       const innerCard = swipedCardElement || document.querySelector(`.record-card-inner[data-id="${id}"]`);
 
       showConfirmModal(
@@ -1183,9 +1208,10 @@
           }
         }
       );
-    };
+    }
+    window.deleteRecord = deleteRecord;
 
-    window.updateStatus = (id, type, status) => {
+    function updateStatus(id, type, status) {
       const cardInner = document.querySelector(`.record-card-inner[data-id="${id}"]`);
       if (cardInner) {
         cardInner.style.transition = 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -1222,11 +1248,8 @@
           showToast(status === 'Paid' ? "Payment Marked as Paid!" : "Payment Rejected!", status === 'Paid' ? "paid" : "reject");
         }
       }, 150);
-    };
-
-    document.getElementById('searchName').addEventListener('input', () => { renderedRecordIds.clear(); renderRecords(); });
-    document.getElementById('searchNumber').addEventListener('input', () => { renderedRecordIds.clear(); renderRecords(); });
-    document.getElementById('searchDate').addEventListener('change', () => { renderedRecordIds.clear(); renderRecords(); });
+    }
+    window.updateStatus = updateStatus;
 
     // ==========================================
     // MODERN HTML GENERATOR FOR RECEIPTS 
@@ -1358,7 +1381,7 @@
       `;
     };
 
-    window.downloadReceipt = async (id) => {
+    function downloadReceipt(id) {
       const record = recordsData.find(r => r.id === id);
       if(!record) return;
       showToast("Generating Image...", "info");
@@ -1403,18 +1426,24 @@
 
       try {
         const bgVal = receiptTheme === 'dark' ? '#0f172a' : '#ffffff';
-        const canvas = await html2canvas(wrapper.querySelector('#receiptContent'), { scale: 2.5, useCORS: true, logging: false, backgroundColor: bgVal });
-        const link = document.createElement('a');
-        link.download = `Receipt_${record.userName.replace(/\s+/g, '_')}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
+        html2canvas(wrapper.querySelector('#receiptContent'), { scale: 2.5, useCORS: true, logging: false, backgroundColor: bgVal }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `Receipt_${record.userName.replace(/\s+/g, '_')}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            document.body.removeChild(wrapper);
+        }).catch(err => {
+            showToast("Error generating image", "error");
+            document.body.removeChild(wrapper);
+        });
       } catch(err) { 
         showToast("Error generating image", "error");
+        document.body.removeChild(wrapper);
       }
-      document.body.removeChild(wrapper);
-    };
+    }
+    window.downloadReceipt = downloadReceipt;
 
-    window.downloadPDF = async (id) => {
+    function downloadPDF(id) {
       const record = recordsData.find(r => r.id === id);
       if(!record) return;
       showToast("Generating PDF...", "info");
@@ -1467,14 +1496,19 @@
       };
 
       try {
-        await html2pdf().set(opt).from(element).save();
-        document.body.removeChild(wrapper);
-        showToast("PDF Downloaded", "save");
+        html2pdf().set(opt).from(element).save().then(() => {
+            document.body.removeChild(wrapper);
+            showToast("PDF Downloaded", "save");
+        }).catch(err => {
+            document.body.removeChild(wrapper);
+            showToast("Error generating PDF", "error");
+        });
       } catch(err) {
         document.body.removeChild(wrapper);
         showToast("Error generating PDF", "error");
       }
-    };
+    }
+    window.downloadPDF = downloadPDF;
 
     setTodayDate();
     syncDataFromSheet(); 
