@@ -39,7 +39,8 @@
       background-color: var(--bg-color);
       color: var(--text-main);
       -webkit-tap-highlight-color: transparent;
-      overscroll-behavior-y: none;
+      overscroll-behavior-x: hidden;
+      overflow-x: hidden;
     }
 
     ::-webkit-scrollbar { display: none; }
@@ -71,8 +72,8 @@
     
     .calc-input { text-align: center; font-weight: 600; }
 
-    .nav-item { color: var(--text-muted); transition: all 0.2s; }
-    .nav-item.active { color: var(--primary); transform: translateY(-2px); }
+    .nav-item { color: var(--text-muted); transition: all 0.2s cubic-bezier(0.34, 1.15, 0.64, 1); }
+    .nav-item.active { color: var(--primary); transform: translateY(-4px) scale(1.05); }
     .nav-item.active .nav-icon-bg { background-color: rgba(14, 165, 233, 0.15); border-radius: 12px; padding: 4px 16px; }
     
     .loader {
@@ -83,34 +84,85 @@
 
     /* CSS transition for details animation */
     .details-panel {
-      transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out, margin-top 0.4s ease-in-out;
+      transition: max-height 0.4s cubic-bezier(0.34, 1.15, 0.64, 1), opacity 0.3s ease-in-out, margin-top 0.3s ease-in-out;
     }
 
-    /* CSS transition for Dynamic Island Toast with smooth slide up */
+    /* Spring Animation for newly loaded cards */
+    @keyframes springFadeIn {
+      0% { opacity: 0; transform: translateY(40px) scale(0.9); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .new-record-anim {
+      animation: springFadeIn 0.5s cubic-bezier(0.34, 1.15, 0.64, 1) both;
+    }
+
+    .record-wrapper {
+      transform-origin: top center;
+    }
+
+    /* Recent Apps style smooth collapse & delete */
+    .record-wrapper.removing {
+      transition: all 0.5s cubic-bezier(0.34, 1.15, 0.64, 1);
+      transform: scale(0.5) translateX(-100vw) !important;
+      opacity: 0;
+      max-height: 0 !important;
+      margin-bottom: 0 !important;
+      border-width: 0 !important;
+    }
+
+    /* Dynamic Island Toast */
     .toast-wrapper {
-      transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: all 0.5s cubic-bezier(0.34, 1.15, 0.64, 1);
       max-height: 0;
       opacity: 0;
-      transform: translateY(-20px) scale(0.8);
+      transform: translateY(-40px) scale(0.5);
       margin-top: 0;
       display: flex;
       justify-content: center;
       width: 100%;
-      overflow: hidden; 
+      pointer-events: none;
     }
     .toast-wrapper.toast-show {
       max-height: 100px; 
       opacity: 1;
       transform: translateY(0) scale(1);
-      margin-top: 12px;
-      overflow: visible; 
+      margin-top: 14px;
+      pointer-events: auto;
+    }
+
+    /* Bouncy Touch Feedback */
+    .ios-bounce {
+      transition: transform 0.3s cubic-bezier(0.34, 1.15, 0.64, 1), opacity 0.3s cubic-bezier(0.34, 1.15, 0.64, 1), background-color 0.2s;
+    }
+    .ios-bounce:active {
+      transform: scale(0.96); 
+      opacity: 0.8;
+      transition: transform 0.05s ease-out, opacity 0.05s ease-out;
+    }
+
+    /* FAST BOUNCE FOR SAVE BUTTON */
+    .save-bounce {
+      transition: transform 0.4s cubic-bezier(0.34, 1.15, 0.64, 1), background-color 0.2s;
+    }
+    .save-bounce:active {
+      transform: scale(0.94);
+      transition: transform 0.02s ease-out; 
+    }
+
+    /* Premium Search Panel */
+    .search-panel {
+      transition: max-height 0.4s cubic-bezier(0.34, 1.15, 0.64, 1), 
+                  opacity 0.3s ease-in-out, 
+                  margin-bottom 0.4s cubic-bezier(0.34, 1.15, 0.64, 1),
+                  transform 0.4s cubic-bezier(0.34, 1.15, 0.64, 1);
+      transform-origin: top center;
     }
   </style>
 </head>
 <body class="antialiased flex flex-col h-[100dvh] overflow-hidden">
 
   <!-- Top App Bar -->
-  <header class="bg-[#1e293b] border-b border-[#334155] pt-10 pb-4 px-5 shadow-md flex justify-between items-center z-10 shrink-0">
+  <header class="bg-[#1e293b] border-b border-[#334155] pt-10 pb-4 px-5 shadow-md flex justify-between items-center z-10 shrink-0 relative">
     <div>
       <div class="flex items-center gap-2 mb-0.5">
         <h1 class="text-xl font-bold tracking-wide text-white">Payment Tracker</h1>
@@ -129,8 +181,11 @@
     </div>
   </header>
 
+  <!-- Dynamic Island Toast Container (Fixed at top) -->
+  <div id="toast-container" class="fixed top-16 left-0 right-0 z-50 flex flex-col items-center pointer-events-none px-4"></div>
+
   <!-- Main Scrollable Content -->
-  <main class="flex-1 min-h-0 overflow-y-auto pb-32" id="main-scroll">
+  <main class="flex-1 min-h-0 overflow-y-auto pb-32 overflow-x-hidden relative" id="main-scroll">
     
     <!-- ==================== TAB 1: NEW ENTRY ==================== -->
     <div id="tab-new" class="tab-content active space-y-5 max-w-md mx-auto px-4 pt-5">
@@ -218,7 +273,7 @@
             <span class="text-sm font-medium text-slate-400 uppercase tracking-wider">Grand Total</span>
             <span id="grandTotalDisplay" class="text-2xl font-bold tracking-tight text-sky-400">৳ 0</span>
           </div>
-          <button type="submit" id="submitBtn" class="w-full py-4 bg-sky-500 active:bg-sky-600 text-white font-bold rounded-b-2xl transition-colors shadow-[0_4px_14px_rgba(14,165,233,0.3)] flex justify-center items-center gap-2 text-lg">
+          <button type="submit" id="submitBtn" class="w-full py-4 bg-sky-500 active:bg-sky-600 text-white font-bold rounded-b-2xl shadow-[0_4px_14px_rgba(14,165,233,0.3)] flex justify-center items-center gap-2 text-lg save-bounce">
             <i class="fa-solid fa-check-circle"></i> Save Record
           </button>
         </div>
@@ -236,18 +291,18 @@
             <span id="recordCount" class="bg-sky-500/20 border border-sky-500/30 text-sky-400 text-[10px] font-bold px-2 py-0.5 rounded-full" title="Total Records">0</span>
           </div>
           <div class="flex items-center gap-2">
-            <!-- Search Toggle Button -->
-            <button onclick="toggleSearch()" id="searchToggleBtn" class="text-[12px] bg-[#1e293b] text-sky-400 border border-sky-500/30 w-8 h-8 rounded-full font-bold active:bg-[#334155] transition-colors flex items-center justify-center shadow-sm">
+            <!-- Search Toggle Button (Bouncy) -->
+            <button onclick="toggleSearch()" id="searchToggleBtn" class="text-[12px] bg-[#1e293b] text-sky-400 border border-sky-500/30 w-8 h-8 rounded-full font-bold active:bg-[#334155] flex items-center justify-center shadow-sm ios-bounce">
               <i class="fa-solid fa-magnifying-glass"></i>
             </button>
-            <button onclick="toggleReceiptTheme()" id="themeToggleBtn" class="text-[10px] bg-[#1e293b] text-sky-400 border border-sky-500/30 px-3 py-1.5 rounded-full font-bold active:bg-[#334155] transition-colors flex items-center gap-1.5 whitespace-nowrap">
+            <button onclick="toggleReceiptTheme()" id="themeToggleBtn" class="text-[10px] bg-[#1e293b] text-sky-400 border border-sky-500/30 px-3 py-1.5 rounded-full font-bold active:bg-[#334155] flex items-center gap-1.5 whitespace-nowrap ios-bounce">
               <i class="fa-solid fa-moon"></i> Dark Receipt
             </button>
           </div>
         </div>
 
-        <!-- Collapsible Advanced Search / Filters -->
-        <div id="searchContainer" class="transition-all duration-300 ease-in-out overflow-hidden" style="max-height: 0px; opacity: 0; margin-bottom: 0px;">
+        <!-- Premium Search Panel -->
+        <div id="searchContainer" class="search-panel overflow-hidden" style="max-height: 0px; opacity: 0; margin-bottom: 0px; transform: translateY(-10px) scale(0.95);">
           <div class="bg-[#1e293b] p-3 rounded-xl border border-[#334155] shadow-sm space-y-3">
             <div class="relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -269,7 +324,7 @@
             </div>
             
             <div class="flex justify-end">
-              <button onclick="clearFilters()" class="text-[10px] bg-slate-700/50 text-slate-300 border border-slate-600 px-3 py-1.5 rounded-md font-bold active:bg-slate-600 transition-colors">
+              <button onclick="clearFilters()" class="text-[10px] bg-slate-700/50 text-slate-300 border border-slate-600 px-3 py-1.5 rounded-md font-bold active:bg-slate-600 ios-bounce">
                 <i class="fa-solid fa-rotate-left mr-1"></i> Reset Filters
               </button>
             </div>
@@ -278,7 +333,7 @@
       </div>
 
       <!-- Main History Records List -->
-      <div class="px-4 space-y-4 pt-2 pb-6">
+      <div class="px-4 pt-2 pb-6 w-full">
         <div id="emptyState" class="hidden bg-[#1e293b] p-10 text-center rounded-2xl border border-[#334155] shadow-sm mt-4">
           <div class="w-16 h-16 bg-[#0b1120] rounded-full flex items-center justify-center mx-auto mb-3">
             <i class="fa-solid fa-box-open text-2xl text-slate-600"></i>
@@ -287,7 +342,7 @@
           <p class="text-xs text-slate-500 mt-1">Add a new entry to see it here.</p>
         </div>
 
-        <div id="recordsContainer" class="space-y-4"></div>
+        <div id="recordsContainer" class="w-full flex flex-col"></div>
       </div>
     </div>
   </main>
@@ -304,8 +359,6 @@
     </button>
   </nav>
 
-  <div id="toast-container" class="fixed top-14 left-0 right-0 z-50 flex flex-col items-center gap-2 pointer-events-none px-4"></div>
-
   <!-- Delete Confirmation Modal -->
   <div id="confirm-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
     <div class="bg-[#1e293b] border border-[#334155] rounded-2xl shadow-xl w-full max-w-xs p-6 transform scale-95 transition-transform duration-300 text-center">
@@ -315,8 +368,8 @@
       <h3 class="text-lg font-bold text-white mb-1">Delete Record?</h3>
       <p class="text-slate-400 mb-6 text-sm">Are you sure you want to delete this record? It cannot be restored.</p>
       <div class="flex gap-3">
-        <button id="confirm-cancel" class="flex-1 py-3 text-slate-300 bg-[#334155] font-bold rounded-xl active:bg-slate-600 transition-colors text-sm">No</button>
-        <button id="confirm-ok" class="flex-1 py-3 bg-red-500/10 text-red-400 border border-red-500/30 font-bold rounded-xl active:bg-red-500/20 transition-colors text-sm">Yes, Delete</button>
+        <button id="confirm-cancel" class="flex-1 py-3 text-slate-300 bg-[#334155] font-bold rounded-xl active:bg-slate-600 ios-bounce text-sm">No</button>
+        <button id="confirm-ok" class="flex-1 py-3 bg-red-500/10 text-red-400 border border-red-500/30 font-bold rounded-xl active:bg-red-500/20 ios-bounce text-sm">Yes, Delete</button>
       </div>
     </div>
   </div>
@@ -333,6 +386,7 @@
     let recordsData = [];
     let editingId = null;
     let expandedRecordIds = new Set(); 
+    let renderedRecordIds = new Set(); 
 
     const parseStatus = (str) => {
       const s = String(str || '');
@@ -350,12 +404,12 @@
       if(receiptTheme === 'dark') {
         receiptTheme = 'light';
         btn.innerHTML = `<i class="fa-solid fa-sun"></i> Light Receipt`;
-        btn.className = "text-[10px] bg-slate-200 text-slate-700 border border-slate-300 px-3 py-1.5 rounded-full font-bold active:bg-slate-300 transition-colors flex items-center gap-1.5 shadow-sm whitespace-nowrap";
+        btn.className = "text-[10px] bg-slate-200 text-slate-700 border border-slate-300 px-3 py-1.5 rounded-full font-bold active:bg-slate-300 flex items-center gap-1.5 shadow-sm whitespace-nowrap ios-bounce";
         showToast("Light Theme Selected", "info");
       } else {
         receiptTheme = 'dark';
         btn.innerHTML = `<i class="fa-solid fa-moon"></i> Dark Receipt`;
-        btn.className = "text-[10px] bg-[#1e293b] text-sky-400 border border-sky-500/30 px-3 py-1.5 rounded-full font-bold active:bg-[#334155] transition-colors flex items-center gap-1.5 whitespace-nowrap";
+        btn.className = "text-[10px] bg-[#1e293b] text-sky-400 border border-sky-500/30 px-3 py-1.5 rounded-full font-bold active:bg-[#334155] flex items-center gap-1.5 whitespace-nowrap ios-bounce";
         showToast("Dark Theme Selected", "info");
       }
     };
@@ -368,11 +422,13 @@
         container.style.maxHeight = '250px'; 
         container.style.opacity = '1';
         container.style.marginBottom = '12px';
+        container.style.transform = 'translateY(0) scale(1)';
         btnIcon.className = 'fa-solid fa-times'; 
       } else {
         container.style.maxHeight = '0px';
         container.style.opacity = '0';
         container.style.marginBottom = '0px';
+        container.style.transform = 'translateY(-10px) scale(0.95)';
         btnIcon.className = 'fa-solid fa-magnifying-glass'; 
       }
     };
@@ -482,9 +538,16 @@
       document.getElementById(`tab-${tabName}`).classList.add('active');
       document.getElementById(`nav-${tabName}`).classList.add('active');
       document.getElementById('main-scroll').scrollTo(0, 0);
-      if(tabName === 'history') renderRecords();
+      
+      if(tabName === 'history') {
+        renderedRecordIds.clear(); 
+        renderRecords();
+      }
     };
 
+    // ==========================================
+    // DYNAMIC ISLAND TOAST NOTIFICATION 
+    // ==========================================
     const showToast = (message, type = 'save') => {
       const container = document.getElementById('toast-container');
       
@@ -518,11 +581,9 @@
       wrapper.appendChild(toastContent);
       container.appendChild(wrapper);
       
-      // Trigger entrance animation
       void wrapper.offsetWidth; 
       wrapper.classList.add('toast-show');
       
-      // Exit animation
       setTimeout(() => { 
         wrapper.classList.remove('toast-show');
         setTimeout(() => wrapper.remove(), 500); 
@@ -530,22 +591,32 @@
     };
 
     let confirmCallback = null;
-    const showConfirmModal = (callback) => {
+    let cancelCallback = null;
+
+    const showConfirmModal = (onConfirm, onCancel) => {
       const modal = document.getElementById('confirm-modal');
+      confirmCallback = onConfirm;
+      cancelCallback = onCancel;
+
       modal.classList.remove('hidden');
       setTimeout(() => {
         modal.classList.remove('opacity-0');
         modal.querySelector('div').classList.remove('scale-95');
       }, 10);
-      confirmCallback = callback;
     };
+
     const closeConfirmModal = () => {
       const modal = document.getElementById('confirm-modal');
       modal.classList.add('opacity-0');
       modal.querySelector('div').classList.add('scale-95');
       setTimeout(() => { modal.classList.add('hidden'); }, 300);
     };
-    document.getElementById('confirm-cancel').addEventListener('click', closeConfirmModal);
+
+    document.getElementById('confirm-cancel').addEventListener('click', () => {
+      if(cancelCallback) cancelCallback();
+      closeConfirmModal();
+    });
+
     document.getElementById('confirm-ok').addEventListener('click', () => {
       if(confirmCallback) confirmCallback();
       closeConfirmModal();
@@ -575,6 +646,7 @@
       document.getElementById('searchName').value = '';
       document.getElementById('searchNumber').value = '';
       document.getElementById('searchDate').value = '';
+      renderedRecordIds.clear(); 
       renderRecords();
     };
 
@@ -596,6 +668,127 @@
       
       lastScrollTop = st <= 0 ? 0 : st;
     }, { passive: true });
+
+    // ==========================================
+    // SWIPE TO DISMISS / DELETE LOGIC (Android 16/17 Perfected)
+    // ==========================================
+    function initSwipeToDismiss() {
+        const container = document.getElementById('recordsContainer');
+        let activeCardInner = null;
+        let activeWrapper = null;
+        let startX = 0, startY = 0, currentX = 0;
+        let isSwiping = false;
+        let siblings = []; // To store sibling elements for performance
+
+        container.addEventListener('touchstart', (e) => {
+            const innerCard = e.target.closest('.record-card-inner');
+            if (!innerCard) return;
+            
+            // Ignore swipe if touching buttons/inputs inside details
+            if (e.target.closest('button') || e.target.closest('input')) return;
+
+            activeCardInner = innerCard;
+            activeWrapper = activeCardInner.closest('.record-wrapper');
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            isSwiping = false;
+            
+            // Pre-calculate siblings for smooth rendering during swipe
+            const allWrappers = Array.from(container.querySelectorAll('.record-wrapper'));
+            const currentIndex = allWrappers.indexOf(activeWrapper);
+            
+            siblings = allWrappers.map((sib, i) => {
+                if (i === currentIndex) return null;
+                const distance = Math.abs(i - currentIndex);
+                // Affect up to 3 adjacent items to create connected pull effect
+                if (distance <= 3) {
+                    return { el: sib.querySelector('.record-card-inner'), distance: distance };
+                }
+                return null;
+            }).filter(Boolean);
+
+            activeCardInner.style.transition = 'none';
+            siblings.forEach(sib => {
+                if(sib.el) sib.el.style.transition = 'none';
+            });
+        }, { passive: true });
+
+        container.addEventListener('touchmove', (e) => {
+            if (!activeCardInner) return;
+
+            const diffX = e.touches[0].clientX - startX;
+            const diffY = e.touches[0].clientY - startY;
+
+            if (!isSwiping) {
+                // Detect horizontal swipe vs vertical scroll
+                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
+                    isSwiping = true;
+                } else if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 10) {
+                    activeCardInner = null;
+                    return;
+                }
+            }
+
+            if (isSwiping) {
+                if (diffX < 0) { // Only swipe left
+                    if(e.cancelable) e.preventDefault(); 
+                    currentX = diffX;
+                    
+                    // Dynamic Island / Android 16 elastic resistance
+                    // Moves 1:1 up to -100px, then slows down heavily
+                    const translateVal = diffX > -100 ? diffX : -100 + (diffX + 100) * 0.25;
+                    activeCardInner.style.transform = `translateX(${translateVal}px)`;
+
+                    // Sibling Tremble Effect (Android 16/17 Connected Pull)
+                    siblings.forEach(sib => {
+                        if (sib.el) {
+                            // Exponential decay: closest moves 12%, next 4%, next 1.3%
+                            const pullForce = 0.12 / Math.pow(3, sib.distance - 1); 
+                            const nudge = translateVal * pullForce;
+                            sib.el.style.transform = `translateX(${nudge}px)`;
+                        }
+                    });
+                }
+            }
+        }, { passive: false });
+
+        container.addEventListener('touchend', (e) => {
+            if (!activeCardInner || !isSwiping) return;
+            
+            // Beautiful spring physics curve for release
+            const springTransition = 'transform 0.6s cubic-bezier(0.34, 1.3, 0.64, 1)';
+            activeCardInner.style.transition = springTransition;
+            
+            if (currentX < -75) { // Threshold to trigger delete
+                // Snaps open to reveal delete icon
+                activeCardInner.style.transform = `translateX(-100px)`;
+                const id = Number(activeCardInner.getAttribute('data-id'));
+                const swipedElement = activeCardInner;
+                
+                // Trigger delete after a tiny visual delay
+                setTimeout(() => {
+                    window.deleteRecord(id, swipedElement);
+                }, 150);
+            } else {
+                // Bounce back
+                activeCardInner.style.transform = `translateX(0px)`;
+            }
+
+            // Reset ALL siblings smoothly with the same spring
+            siblings.forEach(sib => {
+                if (sib.el) {
+                    sib.el.style.transition = springTransition;
+                    sib.el.style.transform = 'translateX(0px)';
+                }
+            });
+            
+            activeCardInner = null;
+            activeWrapper = null;
+            isSwiping = false;
+            currentX = 0;
+            siblings = [];
+        });
+    }
 
     const renderRecords = () => {
       const recordsContainer = document.getElementById('recordsContainer');
@@ -650,9 +843,8 @@
       document.getElementById('emptyState').classList.add('hidden');
       
       let html = '';
-      filtered.forEach(record => {
+      filtered.forEach((record, index) => {
         
-        // NEW DUE LOGIC: Check if any item in this specific record is 'Pending'
         const p1000Card = parseStatus(record.status1000x);
         const p615Card = parseStatus(record.status615x);
         const hasDue = p1000Card.status === 'Pending' || p615Card.status === 'Pending';
@@ -686,8 +878,8 @@
           let actionBtns = parsed.status === 'Pending' ? `
             ${inlineTrxInput}
             <div class="flex gap-2 mt-2 w-full">
-              <button onclick="updateStatus(${record.id}, '${type}', 'Paid')" class="flex-1 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded text-xs font-bold active:bg-emerald-500/20 transition-colors">Mark Paid</button>
-              <button onclick="updateStatus(${record.id}, '${type}', 'Rejected')" class="flex-1 py-1.5 bg-red-500/10 text-red-400 border border-red-500/30 rounded text-xs font-bold active:bg-red-500/20 transition-colors">Reject</button>
+              <button onclick="updateStatus(${record.id}, '${type}', 'Paid')" class="flex-1 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded text-xs font-bold active:bg-emerald-500/20 ios-bounce">Mark Paid</button>
+              <button onclick="updateStatus(${record.id}, '${type}', 'Rejected')" class="flex-1 py-1.5 bg-red-500/10 text-red-400 border border-red-500/30 rounded text-xs font-bold active:bg-red-500/20 ios-bounce">Reject</button>
             </div>` : '';
             
           let qtyDisp = record['qty'+type] || '?';
@@ -717,55 +909,63 @@
           ? "max-height: 2000px; opacity: 1; margin-top: 12px;" 
           : "max-height: 0px; opacity: 0; margin-top: 0px;";
         const iconTransform = isExpanded ? "rotate(180deg)" : "rotate(0deg)";
+        
+        const animClass = !renderedRecordIds.has(record.id) ? 'new-record-anim' : '';
+        renderedRecordIds.add(record.id);
 
         html += `
-          <div class="bg-[#1e293b] rounded-2xl shadow-sm border border-[#334155] p-4 relative overflow-hidden">
-            <div class="absolute left-0 top-0 bottom-0 w-1 bg-sky-500"></div>
+          <div id="record-wrapper-${record.id}" class="record-wrapper ${animClass} relative mb-4 rounded-2xl w-full" style="background-color: #ef4444;">
             
-            <!-- Visible Main Info -->
-            <div class="flex justify-between items-start cursor-pointer select-none" onclick="toggleDetails(${record.id})">
-              <div>
-                <h3 class="text-base font-bold text-white leading-tight flex items-center flex-wrap">
-                  ${record.userName}
-                  ${dueBadgeHtml}
-                </h3>
-                <p class="text-[11px] text-slate-400 font-medium mt-1.5"><i class="fa-regular fa-calendar-days"></i> ${record.displayDate}</p>
+            <div class="absolute inset-y-0 right-0 w-1/2 flex items-center justify-end px-6 text-white z-0">
+              <i class="fa-solid fa-trash-can text-2xl drop-shadow-md"></i>
+            </div>
+            
+            <div class="record-card-inner relative w-full h-full bg-[#1e293b] rounded-2xl shadow-sm border border-[#334155] p-4 z-10 transition-transform duration-300 overflow-hidden" data-id="${record.id}">
+              <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-sky-500"></div>
+              
+              <div class="flex justify-between items-start cursor-pointer select-none ios-bounce" onclick="toggleDetails(${record.id})">
+                <div>
+                  <h3 class="text-base font-bold text-white leading-tight flex items-center flex-wrap">
+                    ${record.userName}
+                    ${dueBadgeHtml}
+                  </h3>
+                  <p class="text-[11px] text-slate-400 font-medium mt-1.5"><i class="fa-regular fa-calendar-days"></i> ${record.displayDate}</p>
+                </div>
+                <div class="text-right flex flex-col items-end">
+                  <p class="text-lg font-black text-sky-400 leading-none mb-1.5">৳${record.grandTotal.toLocaleString()}</p>
+                  <div class="flex items-center gap-1 text-[10px] font-bold text-slate-400 bg-[#0b1120] border border-[#334155] px-2 py-1 rounded-full">
+                    Details <i id="icon-${record.id}" class="fa-solid fa-chevron-down transition-transform duration-300" style="transform: ${iconTransform}"></i>
+                  </div>
+                </div>
               </div>
-              <div class="text-right flex flex-col items-end">
-                <p class="text-lg font-black text-sky-400 leading-none mb-1.5">৳${record.grandTotal.toLocaleString()}</p>
-                <div class="flex items-center gap-1 text-[10px] font-bold text-slate-400 bg-[#0b1120] border border-[#334155] px-2 py-1 rounded-full">
-                  Details <i id="icon-${record.id}" class="fa-solid fa-chevron-down transition-transform duration-300" style="transform: ${iconTransform}"></i>
+              
+              <div id="details-${record.id}" class="details-panel overflow-hidden" style="${detailsStyle}">
+                <div class="pt-3 border-t border-[#334155]">
+                  <div class="flex items-center gap-2 mb-3">
+                    <span class="${mBadge} px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide">${record.method}</span>
+                    <span class="text-xs font-mono font-bold text-slate-300">${record.number}</span>
+                  </div>
+                  
+                  ${record.trxId ? `<div class="bg-[#0b1120] border border-[#334155] rounded-md px-2 py-1.5 text-[11px] font-mono text-slate-400 mb-3">Main TrxID: <span class="text-white font-semibold">${record.trxId}</span></div>` : ''}
+                  
+                  <div class="mb-4">
+                    ${renderAction('1000x', record.total1000x, record.status1000x)}
+                    ${renderAction('615x', record.total615x, record.status615x)}
+                  </div>
+                  
+                  <div class="grid grid-cols-4 gap-2 border-t border-[#334155] pt-3">
+                    <button onclick="editRecord(${record.id})" class="col-span-1 py-2 bg-[#0b1120] text-slate-300 text-[10px] font-bold rounded-lg border border-[#334155] active:bg-slate-700 ios-bounce"><i class="fa-solid fa-pen"></i> Edit</button>
+                    <button onclick="deleteRecord(${record.id})" class="col-span-1 py-2 bg-red-500/10 text-red-400 text-[10px] font-bold rounded-lg border border-red-500/30 active:bg-red-500/20 ios-bounce"><i class="fa-solid fa-trash-can"></i> Del</button>
+                    <button onclick="downloadReceipt(${record.id})" class="col-span-1 py-2 bg-slate-700 text-white text-[10px] font-bold rounded-lg active:bg-slate-600 shadow-sm ios-bounce"><i class="fa-regular fa-image"></i> IMG</button>
+                    <button onclick="downloadPDF(${record.id})" class="col-span-1 py-2 bg-sky-500 text-white text-[10px] font-bold rounded-lg active:bg-sky-600 shadow-sm ios-bounce"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                  </div>
                 </div>
               </div>
             </div>
-            
-            <!-- Details Section -->
-            <div id="details-${record.id}" class="details-panel overflow-hidden" style="${detailsStyle}">
-              <div class="pt-3 border-t border-[#334155]">
-                <div class="flex items-center gap-2 mb-3">
-                  <span class="${mBadge} px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide">${record.method}</span>
-                  <span class="text-xs font-mono font-bold text-slate-300">${record.number}</span>
-                </div>
-                
-                ${record.trxId ? `<div class="bg-[#0b1120] border border-[#334155] rounded-md px-2 py-1.5 text-[11px] font-mono text-slate-400 mb-3">Main TrxID: <span class="text-white font-semibold">${record.trxId}</span></div>` : ''}
-                
-                <div class="mb-4">
-                  ${renderAction('1000x', record.total1000x, record.status1000x)}
-                  ${renderAction('615x', record.total615x, record.status615x)}
-                </div>
-                
-                <div class="grid grid-cols-4 gap-2 border-t border-[#334155] pt-3">
-                  <button onclick="editRecord(${record.id})" class="col-span-1 py-2 bg-[#0b1120] text-slate-300 text-[10px] font-bold rounded-lg border border-[#334155] active:bg-slate-700 transition-colors"><i class="fa-solid fa-pen"></i> Edit</button>
-                  <button onclick="deleteRecord(${record.id})" class="col-span-1 py-2 bg-red-500/10 text-red-400 text-[10px] font-bold rounded-lg border border-red-500/30 active:bg-red-500/20 transition-colors"><i class="fa-solid fa-trash-can"></i> Del</button>
-                  <button onclick="downloadReceipt(${record.id})" class="col-span-1 py-2 bg-slate-700 text-white text-[10px] font-bold rounded-lg active:bg-slate-600 transition-colors shadow-sm"><i class="fa-regular fa-image"></i> IMG</button>
-                  <button onclick="downloadPDF(${record.id})" class="col-span-1 py-2 bg-sky-500 text-white text-[10px] font-bold rounded-lg active:bg-sky-600 transition-colors shadow-sm"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-                </div>
-              </div>
-            </div>
-
           </div>`;
       });
       document.getElementById('recordsContainer').innerHTML = html;
+      initSwipeToDismiss(); 
     };
 
     const loadLocalData = () => {
@@ -913,8 +1113,10 @@
       calculateTotals();
       const btn = document.getElementById('submitBtn');
       btn.innerHTML = `<i class="fa-solid fa-check-circle"></i> Save Record`;
-      btn.className = "w-full py-4 bg-sky-500 active:bg-sky-600 text-white font-bold rounded-b-2xl transition-colors shadow-[0_4px_14px_rgba(14,165,233,0.3)] flex justify-center items-center gap-2 text-lg";
+      btn.className = "w-full py-4 bg-sky-500 active:bg-sky-600 text-white font-bold rounded-b-2xl shadow-[0_4px_14px_rgba(14,165,233,0.3)] flex justify-center items-center gap-2 text-lg save-bounce";
       btn.disabled = false;
+      
+      renderedRecordIds.clear();
       switchTab('history');
     };
 
@@ -944,43 +1146,87 @@
       
       const btn = document.getElementById('submitBtn');
       btn.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Update Record`;
-      btn.className = "w-full py-4 bg-emerald-500 active:bg-emerald-600 text-white font-bold rounded-b-2xl transition-colors shadow-[0_4px_14px_rgba(16,185,129,0.3)] flex justify-center items-center gap-2 text-lg";
+      btn.className = "w-full py-4 bg-emerald-500 active:bg-emerald-600 text-white font-bold rounded-b-2xl shadow-[0_4px_14px_rgba(16,185,129,0.3)] flex justify-center items-center gap-2 text-lg save-bounce";
     };
 
-    window.deleteRecord = (id) => {
-      showConfirmModal(() => {
-        recordsData = recordsData.filter(r => r.id !== id);
-        renderRecords(); 
-        sendActionToSheet('deleteRecord', { id: id }).then(() => {
-          showToast("Record Deleted!", "delete");
-        });
-      });
+    // Modified Delete logic to include Android 16 collapse animation
+    window.deleteRecord = (id, swipedCardElement = null) => {
+      const innerCard = swipedCardElement || document.querySelector(`.record-card-inner[data-id="${id}"]`);
+
+      showConfirmModal(
+        () => {
+          const wrapper = document.getElementById(`record-wrapper-${id}`);
+          if (wrapper) {
+            wrapper.style.height = wrapper.offsetHeight + 'px'; 
+            wrapper.style.marginBottom = '1rem'; 
+            void wrapper.offsetWidth;
+            wrapper.classList.add('removing'); 
+
+            setTimeout(() => {
+              recordsData = recordsData.filter(r => r.id !== id);
+              renderRecords(); 
+              sendActionToSheet('deleteRecord', { id: id }).then(() => {
+                showToast("Record Deleted!", "delete");
+              });
+            }, 400);
+          } else {
+            recordsData = recordsData.filter(r => r.id !== id);
+            renderRecords(); 
+            sendActionToSheet('deleteRecord', { id: id }).then(() => {
+              showToast("Record Deleted!", "delete");
+            });
+          }
+        },
+        () => {
+          if (innerCard) {
+            innerCard.style.transform = 'translateX(0px)';
+          }
+        }
+      );
     };
 
     window.updateStatus = (id, type, status) => {
-      const idx = recordsData.findIndex(r => r.id === id);
-      if (idx !== -1) {
-        const parsed = parseStatus(recordsData[idx]['status' + type]);
+      const cardInner = document.querySelector(`.record-card-inner[data-id="${id}"]`);
+      if (cardInner) {
+        cardInner.style.transition = 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)';
+        cardInner.style.transform = 'scale(0.98)';
         
-        const inlineTrxInput = document.getElementById(`inline-trx-${id}-${type}`);
-        let newItemTrxId = parsed.itemTrxId;
-        
-        if (inlineTrxInput && inlineTrxInput.value.trim() !== '') {
-          newItemTrxId = inlineTrxInput.value.trim();
+        const wrapper = cardInner.closest('.record-wrapper');
+        if(wrapper && wrapper.nextElementSibling) {
+          wrapper.nextElementSibling.style.transition = 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)';
+          wrapper.nextElementSibling.style.transform = 'translateY(-2px)';
         }
-
-        recordsData[idx]['status' + type] = buildStatus(status, parsed.playerId, newItemTrxId);
-        
-        saveLocalData(); 
-        sendActionToSheet('updateRecord', recordsData[idx]);
-        
-        showToast(status === 'Paid' ? "Payment Marked as Paid!" : "Payment Rejected!", status === 'Paid' ? "paid" : "reject");
+        if(wrapper && wrapper.previousElementSibling) {
+          wrapper.previousElementSibling.style.transition = 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)';
+          wrapper.previousElementSibling.style.transform = 'translateY(2px)';
+        }
       }
+
+      setTimeout(() => {
+        const idx = recordsData.findIndex(r => r.id === id);
+        if (idx !== -1) {
+          const parsed = parseStatus(recordsData[idx]['status' + type]);
+          
+          const inlineTrxInput = document.getElementById(`inline-trx-${id}-${type}`);
+          let newItemTrxId = parsed.itemTrxId;
+          
+          if (inlineTrxInput && inlineTrxInput.value.trim() !== '') {
+            newItemTrxId = inlineTrxInput.value.trim();
+          }
+
+          recordsData[idx]['status' + type] = buildStatus(status, parsed.playerId, newItemTrxId);
+          
+          saveLocalData(); 
+          sendActionToSheet('updateRecord', recordsData[idx]);
+          
+          showToast(status === 'Paid' ? "Payment Marked as Paid!" : "Payment Rejected!", status === 'Paid' ? "paid" : "reject");
+        }
+      }, 150);
     };
 
-    document.getElementById('searchName').addEventListener('input', renderRecords);
-    document.getElementById('searchNumber').addEventListener('input', renderRecords);
-    document.getElementById('searchDate').addEventListener('change', renderRecords);
+    document.getElementById('searchName').addEventListener('input', () => { renderedRecordIds.clear(); renderRecords(); });
+    document.getElementById('searchNumber').addEventListener('input', () => { renderedRecordIds.clear(); renderRecords(); });
+    document.getElementById('searchDate').addEventListener('change', () => { renderedRecordIds.clear(); renderRecords(); });
 
     // ==========================================
     // MODERN HTML GENERATOR FOR RECEIPTS 
