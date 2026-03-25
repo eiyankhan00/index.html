@@ -471,9 +471,9 @@
       if (type === 'delete') {
         bg = 'bg-red-500 border-red-400 shadow-[0_8px_16px_rgba(239,68,68,0.4)]';
         icon = 'fa-trash-can';
-      } else if (type === 'reject' || type === 'error') {
+      } else if (type === 'reject' || type === 'error' || type === 'cancel') {
         bg = 'bg-red-500 border-red-400 shadow-[0_8px_16px_rgba(239,68,68,0.4)]';
-        icon = type === 'error' ? 'fa-circle-exclamation' : 'fa-ban';
+        icon = type === 'error' ? 'fa-circle-exclamation' : (type === 'cancel' ? 'fa-xmark' : 'fa-ban');
       } else if (type === 'save' || type === 'info') {
         bg = 'bg-sky-500 border-sky-400 shadow-[0_8px_16px_rgba(14,165,233,0.4)]';
         icon = type === 'info' ? 'fa-info-circle' : 'fa-check-circle';
@@ -656,6 +656,24 @@
       document.getElementById(`nav-${tabName}`).classList.add('active');
       document.getElementById('main-scroll').scrollTo(0, 0);
       
+      // Clear expanded memory when switching tabs
+      expandedRecordIds.clear(); 
+      
+      // NEW: Clear search filters and close search panel when switching tabs
+      document.getElementById('searchName').value = '';
+      document.getElementById('searchNumber').value = '';
+      document.getElementById('searchDate').value = '';
+
+      const searchContainer = document.getElementById('searchContainer');
+      const btnIcon = document.querySelector('#searchToggleBtn i');
+      if (searchContainer && searchContainer.style.maxHeight !== '0px' && searchContainer.style.maxHeight !== '') {
+        searchContainer.style.maxHeight = '0px';
+        searchContainer.style.opacity = '0';
+        searchContainer.style.marginBottom = '0px';
+        searchContainer.style.transform = 'translateY(-10px) scale(0.95)';
+        if (btnIcon) btnIcon.className = 'fa-solid fa-magnifying-glass';
+      }
+
       if(tabName === 'history') {
         renderedRecordIds.clear(); 
         renderRecords();
@@ -703,7 +721,7 @@
     window.confirmCancelEdit = () => {
       window.closeCancelModal();
       resetForm();
-      window.showToast("Edit Cancelled", "info");
+      window.showToast("Edit Cancelled", "cancel");
     };
 
     document.getElementById('confirm-cancel').addEventListener('click', () => {
@@ -772,11 +790,50 @@
       const input = document.getElementById(`inline-${field}-${id}-${type}`);
       if (view && input) {
         let val = input.value.trim();
-        view.innerText = val === '' ? '?' : val;
+        let numVal = Number(val) || 0;
         
+        const idx = recordsData.findIndex(r => r.id === id);
+        if (idx !== -1) {
+            let rec = recordsData[idx];
+            let changed = false;
+            
+            if (field === 'qty') {
+                if ((Number(rec['qty' + type]) || 0) !== numVal) {
+                    rec['qty' + type] = numVal;
+                    changed = true;
+                }
+            } else if (field === 'rate') {
+                if ((Number(rec['rate' + type]) || 0) !== numVal) {
+                    rec['rate' + type] = numVal;
+                    changed = true;
+                }
+            }
+            
+            if (changed) {
+                // Recalculate correctly
+                rec['total' + type] = (Number(rec['qty' + type]) || 0) * (Number(rec['rate' + type]) || 0);
+                rec.grandTotal = (Number(rec.total1000x) || 0) + (Number(rec.total615x) || 0);
+                
+                // Live UI update without full re-render
+                const totalDisp = document.getElementById(`total-disp-${id}-${type}`);
+                const grandDisp = document.getElementById(`grand-disp-${id}`);
+                
+                if (totalDisp) {
+                    totalDisp.innerHTML = rec['total' + type] > 0 ? `৳${rec['total' + type].toLocaleString()}` : `<span class="text-[10px] text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded">TBD</span>`;
+                }
+                if (grandDisp) {
+                    grandDisp.innerText = `৳${rec.grandTotal.toLocaleString()}`;
+                }
+                
+                // Background save
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(recordsData));
+                sendActionToSheet('updateRecord', rec);
+            }
+        }
+        
+        view.innerText = val === '' || numVal === 0 ? '?' : val;
         input.classList.add('hidden');
         input.classList.remove('inline-block', 'inline-pop');
-        
         view.classList.remove('hidden');
         view.classList.add('inline-block');
       }
@@ -823,7 +880,6 @@
         let deleteTriggered = false;
 
         container.addEventListener('touchstart', (e) => {
-            // FIX: Added closest('.record-wrapper') to ensure touches anywhere on the card work
             const wrapperElement = e.target.closest('.record-wrapper');
             if (!wrapperElement) return;
             const innerCard = wrapperElement.querySelector('.record-card-inner');
@@ -932,7 +988,7 @@
             }
             
             if (!deleteTriggered) {
-                const springTransition = 'transform 0.6s cubic-bezier(0.34, 1.3, 0.64, 1)';
+                const springTransition = 'transform 0.5s cubic-bezier(0.34, 1.3, 0.64, 1)';
                 activeCardInner.style.transition = springTransition;
                 activeCardInner.style.transform = `translateX(0px)`;
 
@@ -1088,7 +1144,7 @@
               <button onclick="window.updateStatus(${record.id}, '${type}', 'Rejected')" class="flex-1 py-1.5 bg-red-500/10 text-red-400 border border-red-500/30 rounded text-xs font-bold active:bg-red-500/20 ios-bounce">Reject</button>
             </div>` : '';
             
-          let totalHtml = total > 0 ? `৳${total.toLocaleString()}` : `<span class="text-[10px] text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded">TBD</span>`;
+          let totalHtmlContent = total > 0 ? `৳${total.toLocaleString()}` : `<span class="text-[10px] text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded">TBD</span>`;
 
           return `<div class="p-3 rounded-xl border ${type === '1000x' ? 'bg-[#0b1120] border-[#334155]' : 'bg-[#0b1120] border-[#334155]'} mt-2">
             <div class="flex justify-between items-start">
@@ -1098,7 +1154,7 @@
                 ${itemTrxIdHtml}
               </div>
               <div class="flex flex-col items-end gap-1.5">
-                <span class="text-sm font-black text-sky-400 leading-none">${totalHtml}</span>
+                <span class="text-sm font-black text-sky-400 leading-none" id="total-disp-${record.id}-${type}">${totalHtmlContent}</span>
                 ${statusBadge}
               </div>
             </div>
@@ -1136,7 +1192,7 @@
                   <p class="text-[11px] text-slate-400 font-medium mt-1.5"><i class="fa-regular fa-calendar-days"></i> ${record.displayDate}</p>
                 </div>
                 <div class="text-right flex flex-col items-end">
-                  <p class="text-lg font-black text-sky-400 leading-none mb-1.5">৳${record.grandTotal.toLocaleString()}</p>
+                  <p class="text-lg font-black text-sky-400 leading-none mb-1.5" id="grand-disp-${record.id}">৳${record.grandTotal.toLocaleString()}</p>
                   <div class="flex items-center gap-1 text-[10px] font-bold text-slate-400 bg-[#0b1120] border border-[#334155] px-2 py-1 rounded-full">
                     Details <i id="icon-${record.id}" class="fa-solid fa-chevron-down transition-transform duration-300" style="transform: ${iconTransform}"></i>
                   </div>
