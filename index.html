@@ -100,6 +100,12 @@
       transform-origin: top center;
     }
 
+    /* FIX: Allows horizontal swipe without browser intercepting it */
+    .record-card-inner {
+      touch-action: pan-y;
+      will-change: transform;
+    }
+
     /* Recent Apps style smooth collapse & delete */
     .record-wrapper.removing {
       transition: all 0.4s cubic-bezier(0.34, 1.15, 0.64, 1);
@@ -158,6 +164,25 @@
                   transform 0.4s cubic-bezier(0.34, 1.15, 0.64, 1);
       transform-origin: top center;
     }
+    
+    /* Remove arrows from number input */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
+    /* Inline Edit Pop Animation */
+    @keyframes inlinePop {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .inline-pop {
+      animation: inlinePop 0.25s cubic-bezier(0.34, 1.15, 0.64, 1) forwards;
+    }
   </style>
 </head>
 <body class="antialiased flex flex-col h-[100dvh] overflow-hidden">
@@ -175,7 +200,7 @@
       <p class="text-sky-400 text-xs font-medium" id="syncStatus"><i class="fa-solid fa-arrows-rotate fa-spin"></i> Initializing...</p>
     </div>
     
-    <!-- Total Paid Amount Header Widget -->
+    <!-- Total Paid Amount Header Widget (Simple) -->
     <div class="bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl flex flex-col items-end justify-center shadow-sm">
       <span class="text-[9px] font-bold text-emerald-500/70 uppercase tracking-wider leading-none mb-1">Total Paid</span>
       <span id="headerTotalPaid" class="text-base font-black text-emerald-400 leading-none">৳0</span>
@@ -193,8 +218,11 @@
       <form id="paymentForm" class="space-y-5">
         
         <div class="bg-[#1e293b] p-5 rounded-2xl shadow-sm border border-[#334155] space-y-4">
-          <h2 class="text-sm font-bold text-white border-b border-[#334155] pb-2 mb-3">
-            <i class="fa-solid fa-file-invoice text-sky-400 mr-1"></i> Basic Details
+          <h2 class="text-sm font-bold text-white border-b border-[#334155] pb-2 mb-3 flex justify-between items-center">
+            <span><i class="fa-solid fa-file-invoice text-sky-400 mr-1"></i> <span id="formTitleText">Basic Details</span></span>
+            <button type="button" id="topCancelBtn" onclick="window.showCancelModal()" class="hidden text-[10px] font-bold bg-red-500/10 text-red-400 border border-red-500/30 px-2.5 py-1 rounded-md active:bg-red-500/20 ios-bounce">
+              Cancel
+            </button>
           </h2>
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1.5 ml-1">Date</label>
@@ -241,9 +269,16 @@
               <input type="number" id="rate1000x" placeholder="0.00" min="0" step="0.01" class="input-field calc-input">
             </div>
           </div>
-          <!-- Player ID Input for 1000x -->
-          <div>
+          <div class="mb-3">
             <input type="text" id="playerId1000x" placeholder="Player ID / Due ID (Optional)" class="input-field text-sm py-2.5 border-dashed border-[#475569] focus:border-solid focus:border-sky-500 text-sky-100 placeholder-slate-500">
+          </div>
+          <!-- Status Changer (Hidden by default, shown only on Edit) -->
+          <div id="statusContainer1000x" class="hidden">
+            <select id="status1000xInput" class="input-field text-sm py-2 bg-[#0b1120] border border-[#334155] font-semibold appearance-none text-sky-100">
+              <option value="Pending">⏱ Pending (Due)</option>
+              <option value="Paid">✓ Paid</option>
+              <option value="Rejected">✕ Rejected</option>
+            </select>
           </div>
         </div>
 
@@ -263,9 +298,16 @@
               <input type="number" id="rate615x" placeholder="0.00" min="0" step="0.01" class="input-field calc-input">
             </div>
           </div>
-          <!-- Player ID Input for 615x -->
-          <div>
+          <div class="mb-3">
             <input type="text" id="playerId615x" placeholder="Player ID / Due ID (Optional)" class="input-field text-sm py-2.5 border-dashed border-[#475569] focus:border-solid focus:border-sky-500 text-sky-100 placeholder-slate-500">
+          </div>
+          <!-- Status Changer (Hidden by default, shown only on Edit) -->
+          <div id="statusContainer615x" class="hidden">
+            <select id="status615xInput" class="input-field text-sm py-2 bg-[#0b1120] border border-[#334155] font-semibold appearance-none text-sky-100">
+              <option value="Pending">⏱ Pending (Due)</option>
+              <option value="Paid">✓ Paid</option>
+              <option value="Rejected">✕ Rejected</option>
+            </select>
           </div>
         </div>
 
@@ -292,7 +334,8 @@
             <span id="recordCount" class="bg-sky-500/20 border border-sky-500/30 text-sky-400 text-[10px] font-bold px-2 py-0.5 rounded-full" title="Total Records">0</span>
           </div>
           <div class="flex items-center gap-2">
-            <button onclick="window.toggleSearch()" id="searchToggleBtn" class="text-[12px] bg-[#1e293b] text-sky-400 border border-sky-500/30 w-8 h-8 rounded-full font-bold active:bg-[#334155] flex items-center justify-center shadow-sm ios-bounce">
+            <!-- Search Toggle Button (Bouncy) -->
+            <button onclick="window.toggleSearch(event)" id="searchToggleBtn" class="text-[12px] bg-[#1e293b] text-sky-400 border border-sky-500/30 w-8 h-8 rounded-full font-bold active:bg-[#334155] flex items-center justify-center shadow-sm ios-bounce">
               <i class="fa-solid fa-magnifying-glass"></i>
             </button>
             <button onclick="window.toggleReceiptTheme()" id="themeToggleBtn" class="text-[10px] bg-[#1e293b] text-sky-400 border border-sky-500/30 px-3 py-1.5 rounded-full font-bold active:bg-[#334155] flex items-center gap-1.5 whitespace-nowrap ios-bounce">
@@ -308,7 +351,7 @@
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                 <i class="fa-solid fa-user text-xs"></i>
               </div>
-              <input type="text" id="searchName" placeholder="Search by name or ID..." class="w-full pl-8 pr-3 py-2 bg-[#0b1120] border border-[#334155] text-white placeholder-slate-500 rounded-lg focus:border-sky-500 outline-none text-sm">
+              <input type="text" id="searchName" placeholder="Search by name or ID..." oninput="window.triggerSearch()" class="w-full pl-8 pr-3 py-2 bg-[#0b1120] border border-[#334155] text-white placeholder-slate-500 rounded-lg focus:border-sky-500 outline-none text-sm">
             </div>
             
             <div class="flex gap-2">
@@ -316,10 +359,10 @@
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                   <i class="fa-solid fa-phone text-xs"></i>
                 </div>
-                <input type="tel" id="searchNumber" placeholder="Number..." class="w-full pl-8 pr-3 py-2 bg-[#0b1120] border border-[#334155] text-white placeholder-slate-500 rounded-lg focus:border-sky-500 outline-none text-sm">
+                <input type="tel" id="searchNumber" placeholder="Number..." oninput="window.triggerSearch()" class="w-full pl-8 pr-3 py-2 bg-[#0b1120] border border-[#334155] text-white placeholder-slate-500 rounded-lg focus:border-sky-500 outline-none text-sm">
               </div>
               <div class="relative flex-1">
-                <input type="date" id="searchDate" class="w-full px-2 py-2 bg-[#0b1120] border border-[#334155] text-slate-300 rounded-lg focus:border-sky-500 outline-none text-[13px]">
+                <input type="date" id="searchDate" onchange="window.triggerSearch()" class="w-full px-2 py-2 bg-[#0b1120] border border-[#334155] text-slate-300 rounded-lg focus:border-sky-500 outline-none text-[13px]">
               </div>
             </div>
             
@@ -370,6 +413,21 @@
       <div class="flex gap-3">
         <button id="confirm-cancel" class="flex-1 py-3 text-slate-300 bg-[#334155] font-bold rounded-xl active:bg-slate-600 ios-bounce text-sm">No</button>
         <button id="confirm-ok" class="flex-1 py-3 bg-red-500/10 text-red-400 border border-red-500/30 font-bold rounded-xl active:bg-red-500/20 ios-bounce text-sm">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cancel Edit Confirmation Modal (Red Theme) -->
+  <div id="cancel-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
+    <div class="bg-[#1e293b] border border-[#334155] rounded-2xl shadow-xl w-full max-w-xs p-6 transform scale-95 transition-transform duration-300 text-center">
+      <div class="w-16 h-16 bg-red-500/10 border border-red-500/30 rounded-full flex items-center justify-center mx-auto mb-4 text-red-400 text-3xl">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3 class="text-lg font-bold text-red-400 mb-1">Cancel Edit?</h3>
+      <p class="text-slate-400 mb-6 text-sm">Are you sure you want to discard your changes? The original data will be kept.</p>
+      <div class="flex gap-3">
+        <button onclick="window.closeCancelModal()" class="flex-1 py-3 text-slate-300 bg-[#334155] font-bold rounded-xl active:bg-slate-600 ios-bounce text-sm">No</button>
+        <button onclick="window.confirmCancelEdit()" class="flex-1 py-3 bg-red-500/10 text-red-400 border border-red-500/30 font-bold rounded-xl active:bg-red-500/20 ios-bounce text-sm">Yes, Cancel</button>
       </div>
     </div>
   </div>
@@ -459,7 +517,8 @@
       }
     };
 
-    window.toggleSearch = () => {
+    window.toggleSearch = (e) => {
+      if(e) e.stopPropagation();
       const container = document.getElementById('searchContainer');
       const btnIcon = document.querySelector('#searchToggleBtn i');
       
@@ -470,7 +529,6 @@
         container.style.transform = 'translateY(0) scale(1)';
         btnIcon.className = 'fa-solid fa-times'; 
         
-        // Show elegant toast on search open
         window.showToast("Find records...", "info");
       } else {
         container.style.maxHeight = '0px';
@@ -480,6 +538,17 @@
         btnIcon.className = 'fa-solid fa-magnifying-glass'; 
       }
     };
+
+    // Close components when clicking outside
+    document.addEventListener('click', (e) => {
+      const searchContainer = document.getElementById('searchContainer');
+      const searchToggleBtn = document.getElementById('searchToggleBtn');
+      if (searchContainer && searchContainer.style.maxHeight !== '0px' && searchContainer.style.maxHeight !== '') {
+        if (!searchContainer.contains(e.target) && searchToggleBtn && !searchToggleBtn.contains(e.target)) {
+          window.toggleSearch();
+        }
+      }
+    });
 
     const getNextId = () => {
       if (recordsData.length === 0) return 1;
@@ -615,6 +684,28 @@
       setTimeout(() => { modal.classList.add('hidden'); }, 300);
     };
 
+    window.showCancelModal = () => {
+      const modal = document.getElementById('cancel-modal');
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.querySelector('div').classList.remove('scale-95');
+      }, 10);
+    };
+
+    window.closeCancelModal = () => {
+      const modal = document.getElementById('cancel-modal');
+      modal.classList.add('opacity-0');
+      modal.querySelector('div').classList.add('scale-95');
+      setTimeout(() => { modal.classList.add('hidden'); }, 300);
+    };
+
+    window.confirmCancelEdit = () => {
+      window.closeCancelModal();
+      resetForm();
+      window.showToast("Edit Cancelled", "info");
+    };
+
     document.getElementById('confirm-cancel').addEventListener('click', () => {
       if(cancelCallback) cancelCallback();
       window.closeConfirmModal();
@@ -651,6 +742,44 @@
       document.getElementById('searchDate').value = '';
       renderedRecordIds.clear(); 
       renderRecords();
+    };
+
+    window.triggerSearch = () => {
+      renderedRecordIds.clear();
+      renderRecords();
+    };
+
+    // ==========================================
+    // INLINE EDIT LOGIC (Tap to edit Qty & Rate)
+    // ==========================================
+    window.editInline = (field, id, type, e) => {
+      if (e) e.stopPropagation();
+      const view = document.getElementById(`view-${field}-${id}-${type}`);
+      const input = document.getElementById(`inline-${field}-${id}-${type}`);
+      if (view && input) {
+        view.classList.add('hidden');
+        view.classList.remove('inline-block');
+        
+        input.classList.remove('hidden');
+        input.classList.add('inline-block', 'inline-pop');
+        input.focus();
+        input.select();
+      }
+    };
+
+    window.saveInline = (field, id, type) => {
+      const view = document.getElementById(`view-${field}-${id}-${type}`);
+      const input = document.getElementById(`inline-${field}-${id}-${type}`);
+      if (view && input) {
+        let val = input.value.trim();
+        view.innerText = val === '' ? '?' : val;
+        
+        input.classList.add('hidden');
+        input.classList.remove('inline-block', 'inline-pop');
+        
+        view.classList.remove('hidden');
+        view.classList.add('inline-block');
+      }
     };
 
     let lastScrollTop = 0;
@@ -694,7 +823,10 @@
         let deleteTriggered = false;
 
         container.addEventListener('touchstart', (e) => {
-            const innerCard = e.target.closest('.record-card-inner');
+            // FIX: Added closest('.record-wrapper') to ensure touches anywhere on the card work
+            const wrapperElement = e.target.closest('.record-wrapper');
+            if (!wrapperElement) return;
+            const innerCard = wrapperElement.querySelector('.record-card-inner');
             if (!innerCard) return;
             
             const id = Number(innerCard.getAttribute('data-id'));
@@ -741,7 +873,7 @@
                     if(e.cancelable) e.preventDefault(); 
                     currentX = diffX;
                     
-                    const translateVal = diffX > -100 ? diffX : -100 + (diffX + 100) * 0.25;
+                    const translateVal = diffX > -75 ? diffX : -75 + (diffX + 75) * 0.2;
                     activeCardInner.style.transform = `translateX(${translateVal}px)`;
 
                     const pullForce = 0.08; 
@@ -750,7 +882,7 @@
                     if (prevInner) prevInner.style.transform = `translateX(${nudge}px)`;
                     if (nextInner) nextInner.style.transform = `translateX(${nudge}px)`;
 
-                    if (currentX < -80 && !holdTimer && !deleteTriggered) {
+                    if (currentX < -70 && !holdTimer && !deleteTriggered) {
                         holdTimer = setTimeout(() => {
                             deleteTriggered = true;
                             
@@ -774,7 +906,7 @@
                                 window.deleteRecord(id, swipedElement);
                             }
                         }, 400); 
-                    } else if (currentX >= -80 && holdTimer) {
+                    } else if (currentX >= -70 && holdTimer) {
                         clearTimeout(holdTimer);
                         holdTimer = null;
                     }
@@ -783,11 +915,20 @@
         }, { passive: false });
 
         container.addEventListener('touchend', (e) => {
-            if (!activeCardInner || !isSwiping) return;
+            if (!activeCardInner) return;
             
             if (holdTimer) {
                 clearTimeout(holdTimer);
                 holdTimer = null;
+            }
+
+            if (!isSwiping) {
+                activeCardInner = null;
+                activeWrapper = null;
+                prevInner = null;
+                nextInner = null;
+                deleteTriggered = false;
+                return;
             }
             
             if (!deleteTriggered) {
@@ -830,16 +971,31 @@
 
         if (nameTerm) {
           const uName = String(r.userName || '').toLowerCase();
-          if (!uName.includes(nameTerm)) {
+          const p1000 = parseStatus(r.status1000x).playerId.toLowerCase();
+          const p615 = parseStatus(r.status615x).playerId.toLowerCase();
+          const mainTrx = String(r.trxId || '').toLowerCase();
+          const p1000Trx = parseStatus(r.status1000x).itemTrxId.toLowerCase();
+          const p615Trx = parseStatus(r.status615x).itemTrxId.toLowerCase();
+          
+          const nameMatch = uName.includes(nameTerm) || 
+                            p1000.includes(nameTerm) || 
+                            p615.includes(nameTerm) || 
+                            mainTrx.includes(nameTerm) || 
+                            p1000Trx.includes(nameTerm) || 
+                            p615Trx.includes(nameTerm);
+                            
+          if (!nameMatch) {
              isMatch = false;
           }
         }
+        
         if (numTerm) {
-          const uNum = String(r.number || '');
+          const uNum = String(r.number || '').replace(/\D/g, '');
           if (!uNum.includes(numTerm)) {
              isMatch = false;
           }
         }
+        
         if (dateTerm) {
           if (r.date !== dateTerm) {
              isMatch = false;
@@ -857,7 +1013,7 @@
       });
       
       recordCount.innerText = filtered.length;
-      headerTotalPaid.innerText = `৳${totalPaid.toLocaleString('en-US')}`; 
+      if (headerTotalPaid) headerTotalPaid.innerText = `৳${totalPaid.toLocaleString('en-US')}`; 
 
       if (filtered.length === 0) { 
         recordsContainer.innerHTML = ''; 
@@ -890,6 +1046,32 @@
           let playerIdHtml = parsed.playerId ? `<div class="text-[11px] text-slate-400 mt-1 font-mono"><span class="text-slate-500">ID:</span> ${parsed.playerId}</div>` : '';
           let itemTrxIdHtml = parsed.itemTrxId ? `<div class="text-[11px] text-sky-400 mt-0.5 font-mono"><span class="text-slate-500">TrxID:</span> ${parsed.itemTrxId}</div>` : '';
 
+          // ==========================================
+          // INLINE EDIT QTY & RATE FOR PENDING ITEMS
+          // ==========================================
+          let qtyRateHtml = '';
+          if (parsed.status === 'Pending') {
+              let currentQty = record['qty'+type] || '';
+              let currentRate = record['rate'+type] || '';
+              let displayQty = currentQty || '?';
+              let displayRate = currentRate || '?';
+              
+              qtyRateHtml = `
+                <span id="view-qty-${record.id}-${type}" onclick="window.editInline('qty', ${record.id}, '${type}', event)" class="cursor-pointer text-sky-300 hover:text-sky-200 transition-colors ios-bounce inline-block min-w-[14px] text-center ml-1" title="Tap to edit">${displayQty}</span>
+                <input type="number" id="inline-qty-${record.id}-${type}" value="${currentQty}" onblur="window.saveInline('qty', ${record.id}, '${type}')" onkeypress="if(event.key === 'Enter') this.blur();" placeholder="Qty" class="hidden w-10 h-5 bg-[#0b1120] border border-sky-500/40 rounded text-center text-[11px] text-sky-100 outline-none focus:border-sky-400 shadow-sm ml-1"> 
+                
+                <span class="text-slate-400 text-[11px] mx-1">x</span> 
+                
+                <span class="text-slate-400 text-[11px] mr-0.5">৳</span>
+                <span id="view-rate-${record.id}-${type}" onclick="window.editInline('rate', ${record.id}, '${type}', event)" class="cursor-pointer text-sky-300 hover:text-sky-200 transition-colors ios-bounce inline-block min-w-[16px] text-center" title="Tap to edit">${displayRate}</span>
+                <input type="number" id="inline-rate-${record.id}-${type}" value="${currentRate}" onblur="window.saveInline('rate', ${record.id}, '${type}')" onkeypress="if(event.key === 'Enter') this.blur();" placeholder="Rate" class="hidden w-12 h-5 bg-[#0b1120] border border-sky-500/40 rounded text-center text-[11px] text-sky-100 outline-none focus:border-sky-400 shadow-sm mr-1">
+              `;
+          } else {
+              let qtyDisp = record['qty'+type] || '?';
+              let rateDisp = record['rate'+type] ? `৳${record['rate'+type]}` : '?';
+              qtyRateHtml = ` <span class="text-slate-400 ml-1">${qtyDisp} x ${rateDisp}</span>`;
+          }
+
           let inlineTrxInput = '';
           if(parsed.status === 'Pending') {
             inlineTrxInput = `
@@ -906,14 +1088,12 @@
               <button onclick="window.updateStatus(${record.id}, '${type}', 'Rejected')" class="flex-1 py-1.5 bg-red-500/10 text-red-400 border border-red-500/30 rounded text-xs font-bold active:bg-red-500/20 ios-bounce">Reject</button>
             </div>` : '';
             
-          let qtyDisp = record['qty'+type] || '?';
-          let rateDisp = record['rate'+type] ? `৳${record['rate'+type]}` : '?';
           let totalHtml = total > 0 ? `৳${total.toLocaleString()}` : `<span class="text-[10px] text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded">TBD</span>`;
 
           return `<div class="p-3 rounded-xl border ${type === '1000x' ? 'bg-[#0b1120] border-[#334155]' : 'bg-[#0b1120] border-[#334155]'} mt-2">
             <div class="flex justify-between items-start">
               <div>
-                <span class="text-xs font-bold text-slate-300">${type} ID: <span class="text-slate-400">${qtyDisp} x ${rateDisp}</span></span>
+                <span class="text-xs font-bold text-slate-300 flex items-center">${type} ID: ${qtyRateHtml}</span>
                 ${playerIdHtml}
                 ${itemTrxIdHtml}
               </div>
@@ -1075,22 +1255,37 @@
       const rawDate = dateInput.value;
       const formattedDate = formatDate(rawDate);
       
-      let stat1 = isActive1 ? 'Pending' : 'N/A';
-      let stat2 = isActive2 ? 'Pending' : 'N/A';
-      
       let itemTrx1 = '';
       let itemTrx2 = '';
+      let oldStatus1 = 'N/A';
+      let oldStatus2 = 'N/A';
 
       if (editingId) {
         const index = recordsData.findIndex(r => r.id === editingId);
         if (index !== -1) {
           const old1 = parseStatus(recordsData[index].status1000x);
           const old2 = parseStatus(recordsData[index].status615x);
-          stat1 = isActive1 ? (old1.status !== 'N/A' ? old1.status : 'Pending') : 'N/A';
-          stat2 = isActive2 ? (old2.status !== 'N/A' ? old2.status : 'Pending') : 'N/A';
           itemTrx1 = old1.itemTrxId;
           itemTrx2 = old2.itemTrxId;
+          oldStatus1 = old1.status;
+          oldStatus2 = old2.status;
         }
+      }
+
+      let stat1InputVal = document.getElementById('status1000xInput').value;
+      let stat2InputVal = document.getElementById('status615xInput').value;
+
+      let stat1Final = isActive1 ? stat1InputVal : 'N/A';
+      let stat2Final = isActive2 ? stat2InputVal : 'N/A';
+
+      // ==========================================
+      // NEW LOGIC: Clear Item TrxID if reverting to Pending
+      // ==========================================
+      if (editingId && oldStatus1 !== 'Pending' && stat1Final === 'Pending') {
+          itemTrx1 = '';
+      }
+      if (editingId && oldStatus2 !== 'Pending' && stat2Final === 'Pending') {
+          itemTrx2 = '';
       }
 
       const recordToSave = {
@@ -1108,8 +1303,8 @@
         rate615x: r2,
         total615x: totals.t615x,
         grandTotal: totals.total,
-        status1000x: buildStatus(stat1, pid1, itemTrx1),
-        status615x: buildStatus(stat2, pid2, itemTrx2)
+        status1000x: buildStatus(stat1Final, pid1, itemTrx1),
+        status615x: buildStatus(stat2Final, pid2, itemTrx2)
       };
 
       if (editingId) {
@@ -1134,7 +1329,18 @@
       editingId = null;
       form.reset();
       setTodayDate();
+      
+      document.getElementById('statusContainer1000x').classList.add('hidden');
+      document.getElementById('statusContainer615x').classList.add('hidden');
+      document.getElementById('status1000xInput').value = 'Pending';
+      document.getElementById('status615xInput').value = 'Pending';
+
       calculateTotals();
+      
+      document.getElementById('formTitleText').innerText = 'Basic Details';
+      const topCancelBtn = document.getElementById('topCancelBtn');
+      if (topCancelBtn) topCancelBtn.classList.add('hidden');
+
       const btn = document.getElementById('submitBtn');
       btn.innerHTML = `<i class="fa-solid fa-check-circle"></i> Save Record`;
       btn.className = "w-full py-4 bg-sky-500 active:bg-sky-600 text-white font-bold rounded-b-2xl shadow-[0_4px_14px_rgba(14,165,233,0.3)] flex justify-center items-center gap-2 text-lg save-bounce";
@@ -1161,15 +1367,25 @@
       rate1000x.value = r.rate1000x || '';
       playerId1000x.value = p1000.playerId;
       
+      document.getElementById('statusContainer1000x').classList.remove('hidden');
+      document.getElementById('status1000xInput').value = p1000.status !== 'N/A' ? p1000.status : 'Pending';
+      
       qty615x.value = r.qty615x || '';
       rate615x.value = r.rate615x || '';
       playerId615x.value = p615.playerId;
       
+      document.getElementById('statusContainer615x').classList.remove('hidden');
+      document.getElementById('status615xInput').value = p615.status !== 'N/A' ? p615.status : 'Pending';
+      
       calculateTotals();
       window.switchTab('new');
       
+      document.getElementById('formTitleText').innerText = 'Update Details';
+      const topCancelBtn = document.getElementById('topCancelBtn');
+      if (topCancelBtn) topCancelBtn.classList.remove('hidden');
+      
       const btn = document.getElementById('submitBtn');
-      btn.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Update Record`;
+      btn.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Update Details`;
       btn.className = "w-full py-4 bg-emerald-500 active:bg-emerald-600 text-white font-bold rounded-b-2xl shadow-[0_4px_14px_rgba(16,185,129,0.3)] flex justify-center items-center gap-2 text-lg save-bounce";
     };
 
@@ -1228,7 +1444,8 @@
       setTimeout(() => {
         const idx = recordsData.findIndex(r => r.id === id);
         if (idx !== -1) {
-          const parsed = parseStatus(recordsData[idx]['status' + type]);
+          let rec = recordsData[idx];
+          const parsed = parseStatus(rec['status' + type]);
           
           const inlineTrxInput = document.getElementById(`inline-trx-${id}-${type}`);
           let newItemTrxId = parsed.itemTrxId;
@@ -1237,10 +1454,23 @@
             newItemTrxId = inlineTrxInput.value.trim();
           }
 
-          recordsData[idx]['status' + type] = buildStatus(status, parsed.playerId, newItemTrxId);
+          // Fetch inline qty & rate if they exist
+          const inlineQtyInput = document.getElementById(`inline-qty-${id}-${type}`);
+          const inlineRateInput = document.getElementById(`inline-rate-${id}-${type}`);
+          
+          if (inlineQtyInput && inlineRateInput) {
+            rec['qty' + type] = Number(inlineQtyInput.value) || 0;
+            rec['rate' + type] = Number(inlineRateInput.value) || 0;
+            rec['total' + type] = rec['qty' + type] * rec['rate' + type];
+            
+            // Recalculate Grand Total
+            rec.grandTotal = (Number(rec.total1000x) || 0) + (Number(rec.total615x) || 0);
+          }
+
+          rec['status' + type] = buildStatus(status, parsed.playerId, newItemTrxId);
           
           saveLocalData(); 
-          sendActionToSheet('updateRecord', recordsData[idx]);
+          sendActionToSheet('updateRecord', rec);
           
           window.showToast(status === 'Paid' ? "Payment Marked as Paid!" : "Payment Rejected!", status === 'Paid' ? "paid" : "reject");
         }
@@ -1513,6 +1743,17 @@
         window.showToast("Error generating PDF", "error");
       }
     };
+
+    // Global Click Listener for resetting inline edits
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('input[id^="inline-qty-"]') && !e.target.closest('input[id^="inline-rate-"]') && !e.target.closest('span[id^="view-qty-"]') && !e.target.closest('span[id^="view-rate-"]')) {
+        document.querySelectorAll('input[id^="inline-qty-"], input[id^="inline-rate-"]').forEach(input => {
+          if (!input.classList.contains('hidden')) {
+            input.blur();
+          }
+        });
+      }
+    });
 
     setTodayDate();
     syncDataFromSheet(); 
