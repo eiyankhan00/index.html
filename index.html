@@ -10,7 +10,7 @@
   
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+
   <!-- html2canvas for Image Download -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <!-- html2pdf for PDF Download -->
@@ -433,11 +433,10 @@
   </div>
 
   <script>
-    const apiKey = ""; 
-
     // ==========================================
     // GOOGLE SHEETS URL & STATE
     // ==========================================
+    const apiKey = ""; 
     const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwLo4sl_VxRbxkvp3wXbN0k0jh2NhOJSR6-YxXXXCdtiG3kYgOasAEKEAcZxzpQBuRg_g/exec"; 
     
     const STORAGE_KEY = 'paymentTrackerMobile_Data';
@@ -490,7 +489,7 @@
       toastContent.innerHTML = `<i class="fa-solid ${icon} ${textColor}"></i> <span class="${textColor}">${message}</span>`;
       
       wrapper.appendChild(toastContent);
-      container.appendChild(wrapper);
+      if(container) container.appendChild(wrapper);
       
       void wrapper.offsetWidth; 
       wrapper.classList.add('toast-show');
@@ -561,16 +560,16 @@
       const syncStatus = document.getElementById('syncStatus');
       
       if(isOnline) {
-        connIndicator.innerHTML = `
+        if(connIndicator) connIndicator.innerHTML = `
           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
           <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
         `;
-        syncStatus.innerHTML = '<i class="fa-solid fa-link text-emerald-400"></i> Connected';
+        if(syncStatus) syncStatus.innerHTML = '<i class="fa-solid fa-link text-emerald-400"></i> Connected';
       } else {
-        connIndicator.innerHTML = `
+        if(connIndicator) connIndicator.innerHTML = `
           <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
         `;
-        syncStatus.innerHTML = '<i class="fa-solid fa-link-slash text-red-400"></i> Offline';
+        if(syncStatus) syncStatus.innerHTML = '<i class="fa-solid fa-link-slash text-red-400"></i> Offline';
       }
     };
 
@@ -646,7 +645,9 @@
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, '0');
       const dd = String(today.getDate()).padStart(2, '0');
-      document.getElementById('dateInput').value = `${yyyy}-${mm}-${dd}`;
+      if(document.getElementById('dateInput')){
+          document.getElementById('dateInput').value = `${yyyy}-${mm}-${dd}`;
+      }
     };
 
     window.switchTab = (tabName) => {
@@ -659,10 +660,10 @@
       // Clear expanded memory when switching tabs
       expandedRecordIds.clear(); 
       
-      // NEW: Clear search filters and close search panel when switching tabs
-      document.getElementById('searchName').value = '';
-      document.getElementById('searchNumber').value = '';
-      document.getElementById('searchDate').value = '';
+      // Clear search filters and close search panel when switching tabs
+      if(document.getElementById('searchName')) document.getElementById('searchName').value = '';
+      if(document.getElementById('searchNumber')) document.getElementById('searchNumber').value = '';
+      if(document.getElementById('searchDate')) document.getElementById('searchDate').value = '';
 
       const searchContainer = document.getElementById('searchContainer');
       const btnIcon = document.querySelector('#searchToggleBtn i');
@@ -1068,15 +1069,15 @@
         return isMatch;
       });
       
-      recordCount.innerText = filtered.length;
+      if(recordCount) recordCount.innerText = filtered.length;
       if (headerTotalPaid) headerTotalPaid.innerText = `৳${totalPaid.toLocaleString('en-US')}`; 
 
       if (filtered.length === 0) { 
-        recordsContainer.innerHTML = ''; 
-        document.getElementById('emptyState').classList.remove('hidden'); 
+        if(recordsContainer) recordsContainer.innerHTML = ''; 
+        if(document.getElementById('emptyState')) document.getElementById('emptyState').classList.remove('hidden'); 
         return; 
       }
-      document.getElementById('emptyState').classList.add('hidden');
+      if(document.getElementById('emptyState')) document.getElementById('emptyState').classList.add('hidden');
       
       let html = '';
       filtered.forEach((record, index) => {
@@ -1224,7 +1225,7 @@
             </div>
           </div>`;
       });
-      document.getElementById('recordsContainer').innerHTML = html;
+      if(recordsContainer) recordsContainer.innerHTML = html;
       initSwipeToDismiss(); 
     };
 
@@ -1276,114 +1277,114 @@
       const t1000x = (Number(qty1000x.value) || 0) * (Number(rate1000x.value) || 0);
       const t615x = (Number(qty615x.value) || 0) * (Number(rate615x.value) || 0);
       const total = t1000x + t615x;
-      document.getElementById('sub1000x').innerText = `৳ ${t1000x.toLocaleString()}`;
-      document.getElementById('sub615x').innerText = `৳ ${t615x.toLocaleString()}`;
-      document.getElementById('grandTotalDisplay').innerText = `৳ ${total.toLocaleString()}`;
+      if(document.getElementById('sub1000x')) document.getElementById('sub1000x').innerText = `৳ ${t1000x.toLocaleString()}`;
+      if(document.getElementById('sub615x')) document.getElementById('sub615x').innerText = `৳ ${t615x.toLocaleString()}`;
+      if(document.getElementById('grandTotalDisplay')) document.getElementById('grandTotalDisplay').innerText = `৳ ${total.toLocaleString()}`;
       return { t1000x, t615x, total };
     };
 
     document.querySelectorAll('.calc-input').forEach(input => input.addEventListener('input', calculateTotals));
 
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const totals = calculateTotals();
-      
-      const q1 = Number(qty1000x.value) || 0;
-      const r1 = Number(rate1000x.value) || 0;
-      const q2 = Number(qty615x.value) || 0;
-      const r2 = Number(rate615x.value) || 0;
-      let pid1 = playerId1000x.value.trim();
-      let pid2 = playerId615x.value.trim();
+    if(form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const totals = calculateTotals();
+        
+        const q1 = Number(qty1000x.value) || 0;
+        const r1 = Number(rate1000x.value) || 0;
+        const q2 = Number(qty615x.value) || 0;
+        const r2 = Number(rate615x.value) || 0;
+        let pid1 = playerId1000x.value.trim();
+        let pid2 = playerId615x.value.trim();
 
-      const isActive1 = q1 > 0 || r1 > 0 || pid1 !== '';
-      const isActive2 = q2 > 0 || r2 > 0 || pid2 !== '';
+        const isActive1 = q1 > 0 || r1 > 0 || pid1 !== '';
+        const isActive2 = q2 > 0 || r2 > 0 || pid2 !== '';
 
-      if (!isActive1 && !isActive2) {
-        return window.showToast("Please enter amount, rate, or at least one ID", "error");
-      }
-
-      window.showToast("Saving data...", "info");
-
-      const btn = document.getElementById('submitBtn');
-      btn.innerHTML = '<div class="loader"></div> <span class="ml-2">Saving...</span>';
-      btn.disabled = true;
-
-      const rawDate = dateInput.value;
-      const formattedDate = formatDate(rawDate);
-      
-      let itemTrx1 = '';
-      let itemTrx2 = '';
-      let oldStatus1 = 'N/A';
-      let oldStatus2 = 'N/A';
-
-      if (editingId) {
-        const index = recordsData.findIndex(r => r.id === editingId);
-        if (index !== -1) {
-          const old1 = parseStatus(recordsData[index].status1000x);
-          const old2 = parseStatus(recordsData[index].status615x);
-          itemTrx1 = old1.itemTrxId;
-          itemTrx2 = old2.itemTrxId;
-          oldStatus1 = old1.status;
-          oldStatus2 = old2.status;
+        if (!isActive1 && !isActive2) {
+          return window.showToast("Please enter amount, rate, or at least one ID", "error");
         }
-      }
 
-      let stat1InputVal = document.getElementById('status1000xInput').value;
-      let stat2InputVal = document.getElementById('status615xInput').value;
+        window.showToast("Saving data...", "info");
 
-      let stat1Final = isActive1 ? stat1InputVal : 'N/A';
-      let stat2Final = isActive2 ? stat2InputVal : 'N/A';
+        const btn = document.getElementById('submitBtn');
+        btn.innerHTML = '<div class="loader"></div> <span class="ml-2">Saving...</span>';
+        btn.disabled = true;
 
-      // ==========================================
-      // NEW LOGIC: Clear Item TrxID if reverting to Pending
-      // ==========================================
-      if (editingId && oldStatus1 !== 'Pending' && stat1Final === 'Pending') {
-          itemTrx1 = '';
-      }
-      if (editingId && oldStatus2 !== 'Pending' && stat2Final === 'Pending') {
-          itemTrx2 = '';
-      }
+        const rawDate = dateInput.value;
+        const formattedDate = formatDate(rawDate);
+        
+        let itemTrx1 = '';
+        let itemTrx2 = '';
+        let oldStatus1 = 'N/A';
+        let oldStatus2 = 'N/A';
 
-      const recordToSave = {
-        id: editingId || getNextId(),
-        date: rawDate,
-        displayDate: formattedDate,
-        userName: userNameInput.value,
-        method: methodInput.value,
-        number: numberInput.value,
-        trxId: trxIdInput.value.trim(),
-        qty1000x: q1,
-        rate1000x: r1,
-        total1000x: totals.t1000x,
-        qty615x: q2,
-        rate615x: r2,
-        total615x: totals.t615x,
-        grandTotal: totals.total,
-        status1000x: buildStatus(stat1Final, pid1, itemTrx1),
-        status615x: buildStatus(stat2Final, pid2, itemTrx2)
-      };
-
-      if (editingId) {
-        const index = recordsData.findIndex(r => r.id === editingId);
-        if (index !== -1) {
-          recordsData[index] = recordToSave;
+        if (editingId) {
+          const index = recordsData.findIndex(r => r.id === editingId);
+          if (index !== -1) {
+            const old1 = parseStatus(recordsData[index].status1000x);
+            const old2 = parseStatus(recordsData[index].status615x);
+            itemTrx1 = old1.itemTrxId;
+            itemTrx2 = old2.itemTrxId;
+            oldStatus1 = old1.status;
+            oldStatus2 = old2.status;
+          }
         }
-        sendActionToSheet('updateRecord', recordToSave).then(() => {
-          window.showToast("Record Updated!", "update");
-          resetForm();
-        });
-      } else {
-        recordsData.unshift(recordToSave);
-        sendActionToSheet('addRecord', recordToSave).then(() => {
-          window.showToast("New Record Saved!", "save");
-          resetForm();
-        });
-      }
-    });
+
+        let stat1InputVal = document.getElementById('status1000xInput').value;
+        let stat2InputVal = document.getElementById('status615xInput').value;
+
+        let stat1Final = isActive1 ? stat1InputVal : 'N/A';
+        let stat2Final = isActive2 ? stat2InputVal : 'N/A';
+
+        // Clear Item TrxID if reverting to Pending
+        if (editingId && oldStatus1 !== 'Pending' && stat1Final === 'Pending') {
+            itemTrx1 = '';
+        }
+        if (editingId && oldStatus2 !== 'Pending' && stat2Final === 'Pending') {
+            itemTrx2 = '';
+        }
+
+        const recordToSave = {
+          id: editingId || getNextId(),
+          date: rawDate,
+          displayDate: formattedDate,
+          userName: userNameInput.value,
+          method: methodInput.value,
+          number: numberInput.value,
+          trxId: trxIdInput.value.trim(),
+          qty1000x: q1,
+          rate1000x: r1,
+          total1000x: totals.t1000x,
+          qty615x: q2,
+          rate615x: r2,
+          total615x: totals.t615x,
+          grandTotal: totals.total,
+          status1000x: buildStatus(stat1Final, pid1, itemTrx1),
+          status615x: buildStatus(stat2Final, pid2, itemTrx2)
+        };
+
+        if (editingId) {
+          const index = recordsData.findIndex(r => r.id === editingId);
+          if (index !== -1) {
+            recordsData[index] = recordToSave;
+          }
+          sendActionToSheet('updateRecord', recordToSave).then(() => {
+            window.showToast("Record Updated!", "update");
+            resetForm();
+          });
+        } else {
+          recordsData.unshift(recordToSave);
+          sendActionToSheet('addRecord', recordToSave).then(() => {
+            window.showToast("New Record Saved!", "save");
+            resetForm();
+          });
+        }
+      });
+    }
 
     const resetForm = () => {
       editingId = null;
-      form.reset();
+      if(form) form.reset();
       setTodayDate();
       
       document.getElementById('statusContainer1000x').classList.add('hidden');
@@ -1398,9 +1399,11 @@
       if (topCancelBtn) topCancelBtn.classList.add('hidden');
 
       const btn = document.getElementById('submitBtn');
-      btn.innerHTML = `<i class="fa-solid fa-check-circle"></i> Save Record`;
-      btn.className = "w-full py-4 bg-sky-500 active:bg-sky-600 text-white font-bold rounded-b-2xl shadow-[0_4px_14px_rgba(14,165,233,0.3)] flex justify-center items-center gap-2 text-lg save-bounce";
-      btn.disabled = false;
+      if(btn) {
+        btn.innerHTML = `<i class="fa-solid fa-check-circle"></i> Save Record`;
+        btn.className = "w-full py-4 bg-sky-500 active:bg-sky-600 text-white font-bold rounded-b-2xl shadow-[0_4px_14px_rgba(14,165,233,0.3)] flex justify-center items-center gap-2 text-lg save-bounce";
+        btn.disabled = false;
+      }
       
       renderedRecordIds.clear();
       window.switchTab('history');
@@ -1501,8 +1504,13 @@
         const idx = recordsData.findIndex(r => r.id === id);
         if (idx !== -1) {
           let rec = recordsData[idx];
-          const parsed = parseStatus(rec['status' + type]);
           
+          // PRESERVE OTHER TRX INPUT BEFORE RE-RENDER
+          const otherType = type === '1000x' ? '615x' : '1000x';
+          const otherTrxInput = document.getElementById(`inline-trx-${id}-${otherType}`);
+          const otherTrxValue = otherTrxInput ? otherTrxInput.value : '';
+
+          const parsed = parseStatus(rec['status' + type]);
           const inlineTrxInput = document.getElementById(`inline-trx-${id}-${type}`);
           let newItemTrxId = parsed.itemTrxId;
           
@@ -1510,16 +1518,14 @@
             newItemTrxId = inlineTrxInput.value.trim();
           }
 
-          // Fetch inline qty & rate if they exist
           const inlineQtyInput = document.getElementById(`inline-qty-${id}-${type}`);
           const inlineRateInput = document.getElementById(`inline-rate-${id}-${type}`);
-          
+
           if (inlineQtyInput && inlineRateInput) {
             rec['qty' + type] = Number(inlineQtyInput.value) || 0;
             rec['rate' + type] = Number(inlineRateInput.value) || 0;
             rec['total' + type] = rec['qty' + type] * rec['rate' + type];
             
-            // Recalculate Grand Total
             rec.grandTotal = (Number(rec.total1000x) || 0) + (Number(rec.total615x) || 0);
           }
 
@@ -1529,13 +1535,20 @@
           sendActionToSheet('updateRecord', rec);
           
           window.showToast(status === 'Paid' ? "Payment Marked as Paid!" : "Payment Rejected!", status === 'Paid' ? "paid" : "reject");
+
+          // RESTORE OTHER TRX INPUT AFTER RE-RENDER
+          if (otherTrxValue !== '') {
+              setTimeout(() => {
+                  const restoredOtherTrx = document.getElementById(`inline-trx-${id}-${otherType}`);
+                  if (restoredOtherTrx) {
+                      restoredOtherTrx.value = otherTrxValue;
+                  }
+              }, 50);
+          }
         }
       }, 150);
     };
 
-    // ==========================================
-    // MODERN HTML GENERATOR FOR RECEIPTS 
-    // ==========================================
     const generateReceiptHTML = (record, isFullyPaid, isRejected) => {
       const th = receiptTheme === 'dark' ? {
         bg: '#0f172a', text: '#f8fafc', muted: '#94a3b8', border: '#334155', cardBg: '#1e293b', primary: '#0ea5e9', totalBg: '#0ea5e9', totalText: '#ffffff', trxBg: '#022c22', trxBorder: '#059669', trxText: '#34d399', badgePaidText: '#34d399', badgePendingText: '#fbbf24'
@@ -1800,7 +1813,6 @@
       }
     };
 
-    // Global Click Listener for resetting inline edits
     document.addEventListener('click', (e) => {
       if (!e.target.closest('input[id^="inline-qty-"]') && !e.target.closest('input[id^="inline-rate-"]') && !e.target.closest('span[id^="view-qty-"]') && !e.target.closest('span[id^="view-rate-"]')) {
         document.querySelectorAll('input[id^="inline-qty-"], input[id^="inline-rate-"]').forEach(input => {
